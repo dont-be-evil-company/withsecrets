@@ -2,12 +2,52 @@
 
 version: '3'
 
-vars:
-  GREETING: Hello, world!
-
 tasks:
   default:
-    desc: Print a greeting message
+    desc: List vault and CLI tasks
     cmds:
-      - echo "{{.GREETING}}"
+      - task --list
     silent: true
+
+  build:cli:
+    desc: Build the ws CLI
+    cmds:
+      - go build -o dist/ws .
+
+  test:
+    desc: Run Go tests
+    cmds:
+      - go test ./...
+
+  dev:server:
+    desc: Run the vault API with the dev auth flag on loopback
+    env:
+      PUBLIC_BASE_URL: http://127.0.0.1:8080
+      WITHSECRETS_DEV_AUTH: "1"
+      DATABASE_URL: postgres://withsecrets:withsecrets@127.0.0.1:5432/withsecrets?sslmode=disable
+    cmds:
+      - go run ./apps/server
+
+  dev:portal:
+    desc: Run the static portal
+    dir: apps/portal
+    cmds:
+      - pnpm dev
+
+  dev:desktop:
+    desc: Build the desktop window and run the loopback shell
+    cmds:
+      - pnpm --filter @withsecrets/desktop build
+      - go run ./apps/desktop
+
+  build:desktop:
+    desc: Build the Wails desktop window with FIDO2
+    cmds:
+      - pnpm --filter @withsecrets/desktop build
+      - go build -tags wails,fido2 -o dist/withsecrets-desktop ./apps/desktop
+
+  build:server:
+    desc: Build the vault server and the portal it serves
+    cmds:
+      - pnpm --filter @withsecrets/portal build
+      - go build -o dist/withsecrets-server ./apps/server

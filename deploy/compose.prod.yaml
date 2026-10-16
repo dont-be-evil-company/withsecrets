@@ -1,0 +1,13 @@
+# Production override. Pin image digests before a public deploy.
+# Replace the tags below with repo@sha256:... from the release you reviewed.
+services:
+  nginx:
+    ports: !override
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+  app:
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?Set the https public origin}

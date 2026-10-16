@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: withsecrets vault API
+  version: 0.1.0-beta
+  description: |
+    Ciphertext API. Item plaintext, unlock passphrases, and master keys are not
+    request fields. This document matches the beta server and is not a claim of
+    a finished public API.
+servers:
+  - url: https://vault.example.com
+paths:
+  /.well-known/withsecrets:
+    get:
+      summary: Instance discovery
+      responses:
+        "200":
+          description: Instance id, canonical URL, and enabled providers
+  /healthz:
+    get:
+      summary: Process is up
+      responses:
+        "200":
+          description: OK
+  /readyz:
+    get:
+      summary: Database migrations applied
+      responses:
+        "200":
+          description: Ready
+        "503":
+          description: Not ready
+  /auth/desktop/start:
+    get:
+      summary: Start a PKCE desktop login
+      parameters:
+        - in: query
+          name: state
+          schema: {type: string}
+        - in: query
+          name: code_challenge
+          schema: {type: string}
+        - in: query
+          name: code_challenge_method
+          schema: {type: string, enum: [S256]}
+        - in: query
+          name: callback
+          schema: {type: string}
+      responses:
+        "302":
+          description: Redirect to the portal or the identity provider
+        "400":
+          description: Callback or PKCE rejected
+  /api/v1/auth/desktop/exchange:
+    post:
+      summary: Exchange a one-time code for session tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, codeVerifier, state]
+              properties:
+                code: {type: string}
+                codeVerifier: {type: string}
+                state: {type: string}
+      responses:
+        "200":
+          description: Access and refresh tokens in the body
+        "400":
+          description: Reused, expired, or mismatched grant
+  /api/v1/vaults/{id}/items:
+    post:
+      summary: Create a ciphertext item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ciphertext, cryptoVersion]
+              properties:
+                ciphertext: {type: string, description: Base64 ciphertext}
+                cryptoVersion: {type: integer, enum: [1]}
+                idempotencyKey: {type: string}
+      responses:
+        "201":
+          description: Stored
+        "400":
+          description: Plaintext field rejected
+  /api/v1/items/{id}:
+    put:
+      summary: Compare-and-swap an item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: Updated
+        "409":
+          description: Revision conflict. Both versions stay. The server does not merge plaintext.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []

@@ -1,0 +1,8 @@
+{
+  "name": "@withsecrets/api-contract",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

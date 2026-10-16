@@ -1,0 +1,4 @@
+/* Shared withsecrets tokens. Apps import daisyUI themes directly. */
+:root {
+  --ws-radius: 8px;
+}
