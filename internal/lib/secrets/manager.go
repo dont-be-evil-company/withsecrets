@@ -100,6 +100,9 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 		// Bitwarden uses its own organization concept; projectID is treated
 		// as the Bitwarden organization ID (or falls back to env vars).
 		return NewBitwardenManager(ctx, projectID)
+	case "withsecrets":
+		// Opt-in hosted vault. Existing configs never select this provider.
+		return NewWithSecretsManager()
 	default:
 		return nil, fmt.Errorf("unsupported cloud provider: %s", provider)
 	}

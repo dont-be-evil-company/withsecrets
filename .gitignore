@@ -1,10 +1,13 @@
 .direnv/
 .env
 .env.*
+!deploy/.env.example
 coverage.out
 dist/
 node_modules/
 .svelte-kit
+/apps/desktop/ui/
+.data/
 
 # GUI embed artifacts (placeholder index.html is committed for bare go build)
 internal/gui/dist/**

@@ -1,0 +1,8 @@
+{
+  "name": "@withsecrets/ui",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme.css": "./src/theme.css"
+  }
+}

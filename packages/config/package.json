@@ -1,0 +1,5 @@
+{
+  "name": "@withsecrets/config",
+  "private": true,
+  "type": "module"
+}

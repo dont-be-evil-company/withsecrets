@@ -1,0 +1,1 @@
+ALTER TABLE vaults ADD COLUMN IF NOT EXISTS account_key_wrap BYTEA;

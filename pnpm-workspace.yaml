@@ -1,5 +1,8 @@
 packages:
   - gui
   - web
+  - apps/portal
+  - apps/desktop/frontend
+  - packages/*
 allowBuilds:
   svelte-preprocess: true

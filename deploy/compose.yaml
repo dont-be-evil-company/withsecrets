@@ -1,0 +1,71 @@
+---
+name: withsecrets
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-withsecrets}
+      POSTGRES_USER: ${POSTGRES_USER:-withsecrets}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a strong DB password in .env}
+    volumes:
+      - ${WS_DATA_DIR:-/var/lib/withsecrets}/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    expose: ["5432"]
+    ports:
+      - "${HTTP_BIND:-127.0.0.1}:5432:5432"
+    networks: [private]
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.server
+    image: docker.io/dontbeevilcompany/withsecrets-server:${WITHSECRETS_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set a private DSN for service db}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://127.0.0.1:8080}
+      ATTACHMENT_DIR: /var/lib/withsecrets/attachments
+      OAUTH_GITHUB_CLIENT_ID: ${OAUTH_GITHUB_CLIENT_ID:-}
+      OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET:-}
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
+      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
+      OAUTH_MICROSOFT_CLIENT_ID: ${OAUTH_MICROSOFT_CLIENT_ID:-}
+      OAUTH_MICROSOFT_CLIENT_SECRET: ${OAUTH_MICROSOFT_CLIENT_SECRET:-}
+      OAUTH_MICROSOFT_TENANT: ${OAUTH_MICROSOFT_TENANT:-}
+      WITHSECRETS_DEV_AUTH: ${WITHSECRETS_DEV_AUTH:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - attachments:/var/lib/withsecrets/attachments
+    expose: ["8080"]
+    healthcheck:
+      test: ["CMD", "/app/withsecrets-server", "healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+
+  nginx:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_BIND:-127.0.0.1}:8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [private]
+
+networks:
+  private: {}
+
+volumes:
+  attachments: {}
