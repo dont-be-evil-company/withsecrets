@@ -7,13 +7,12 @@ import (
 )
 
 const (
-	DefaultConfigFileName  = "ws.yaml"
-	AppConfigDirName       = "withsecrets"
-	LegacyAppConfigDirName = "kuba"
+	DefaultConfigFileName = "ws.yaml"
+	AppConfigDirName      = "withsecrets"
 )
 
 // ConfigFileNames lists project config filenames in search priority order.
-var ConfigFileNames = []string{"ws.yaml", "withsecrets.yaml", "kuba.yaml"}
+var ConfigFileNames = []string{"ws.yaml", "withsecrets.yaml"}
 
 // FindConfigFile searches for a project config file in the current directory and parents.
 func FindConfigFile() (string, error) {
@@ -60,11 +59,6 @@ func GlobalConfigDir(homeDir string) string {
 	return filepath.Join(homeDir, ".config", AppConfigDirName)
 }
 
-// LegacyGlobalConfigDir returns the legacy kuba global config directory.
-func LegacyGlobalConfigDir(homeDir string) string {
-	return filepath.Join(homeDir, ".config", LegacyAppConfigDirName)
-}
-
 // CacheDir returns the withsecrets cache directory (~/.cache/withsecrets).
 func CacheDir(homeDir string) string {
 	return filepath.Join(homeDir, ".cache", AppConfigDirName)
@@ -78,9 +72,4 @@ func GUIDir(homeDir string) string {
 // GUIWebDir returns the extracted GUI static assets directory.
 func GUIWebDir(homeDir string) string {
 	return filepath.Join(GUIDir(homeDir), "web")
-}
-
-// LegacyCacheDir returns the legacy kuba cache directory.
-func LegacyCacheDir(homeDir string) string {
-	return filepath.Join(homeDir, ".cache", LegacyAppConfigDirName)
 }

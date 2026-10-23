@@ -10,9 +10,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # GitHub repository details
-REPO="mistweaverco/withsecrets"
+REPO="dont-be-evil-company/withsecrets"
 BINARY_NAME="ws"
-LEGACY_BINARY_NAME="kuba"
 
 # Function to print colored output
 print_status() {
@@ -187,16 +186,6 @@ install_binary() {
     # Install binary
     if cp "$source_path" "$install_path"; then
         print_success "${BINARY_NAME} installed successfully to ${install_path}"
-
-        # Create kuba compatibility symlink in the same directory
-        local install_dir
-        install_dir=$(dirname "$install_path")
-        local legacy_path="${install_dir}/${LEGACY_BINARY_NAME}"
-        if [ -L "$legacy_path" ] || [ -f "$legacy_path" ]; then
-            rm -f "$legacy_path"
-        fi
-        ln -sf "$install_path" "$legacy_path"
-        print_status "Created ${LEGACY_BINARY_NAME} compatibility symlink at ${legacy_path}"
 
         # Add to PATH if installing to user directory
         if [[ "$install_path" == *"/.local/bin"* ]]; then

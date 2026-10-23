@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mistweaverco/withsecrets/internal/templates"
+	"github.com/dont-be-evil-company/withsecrets/internal/templates"
 )
 
 func TestOpenInEditorRequiresEditorEnv(t *testing.T) {
@@ -18,7 +18,7 @@ func TestOpenInEditorRequiresEditorEnv(t *testing.T) {
 }
 
 func TestCreateTemplateCommandCreatesTemplateFile(t *testing.T) {
-	t.Setenv("KUBA_HOME", t.TempDir())
+	t.Setenv("WS_HOME", t.TempDir())
 	t.Setenv("EDITOR", "fake-editor")
 	t.Setenv("VISUAL", "")
 
@@ -48,7 +48,7 @@ func TestCreateTemplateCommandCreatesTemplateFile(t *testing.T) {
 
 func TestCreateTemplateCommandOpensExistingTemplate(t *testing.T) {
 	home := t.TempDir()
-	t.Setenv("KUBA_HOME", home)
+	t.Setenv("WS_HOME", home)
 	t.Setenv("EDITOR", "fake-editor")
 	t.Setenv("VISUAL", "")
 

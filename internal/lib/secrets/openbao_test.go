@@ -226,3 +226,85 @@ func TestOpenBaoManager_DeleteSecret(t *testing.T) {
 		t.Errorf("Failed to delete secret: %v", err)
 	}
 }
+
+func TestKV2DataPathInsertsDataSegment(t *testing.T) {
+	got := kv2DataPath("secretv2/withsecrets/foo/bar", "secretv2/")
+	if got != "secretv2/data/withsecrets/foo/bar" {
+		t.Fatalf("kv2DataPath() = %q", got)
+	}
+
+	got = kv2DataPath("kv/data/shared/key", "kv")
+	if got != "kv/data/shared/key" {
+		t.Fatalf("existing data segment was rewritten to %q", got)
+	}
+
+	alt, ok := insertKV2DataSegment("secretv2/withsecrets/foo/bar")
+	if !ok || alt != "secretv2/data/withsecrets/foo/bar" {
+		t.Fatalf("insertKV2DataSegment() = %q, %v", alt, ok)
+	}
+	if _, ok := insertKV2DataSegment("kv/data/shared/key"); ok {
+		t.Fatal("insertKV2DataSegment rewrote a path that already has /data/")
+	}
+}
+
+func TestSelectSecretValueKV2AndField(t *testing.T) {
+	kv2 := map[string]interface{}{
+		"data": map[string]interface{}{
+			"MY_TOKEN": "tok",
+			"OTHER":    "other",
+		},
+		"metadata": map[string]interface{}{"version": 1},
+	}
+
+	got, err := selectSecretValue(kv2, "MY_TOKEN", "kv/data/shared/key")
+	if err != nil {
+		t.Fatalf("field select: %v", err)
+	}
+	if got != "tok" {
+		t.Fatalf("field select = %q, want tok", got)
+	}
+
+	if _, err := selectSecretValue(kv2, "MISSING", "kv/data/shared/key"); err == nil {
+		t.Fatal("expected missing field error")
+	}
+
+	nonString := map[string]interface{}{
+		"data": map[string]interface{}{
+			"COUNT": map[string]interface{}{"n": 1},
+		},
+		"metadata": map[string]interface{}{"version": 1},
+	}
+	if _, err := selectSecretValue(nonString, "COUNT", "kv/data/shared/key"); err == nil {
+		t.Fatal("expected non-string field error")
+	}
+
+	got, err = selectSecretValue(kv2, "", "kv/data/shared/key")
+	if err != nil {
+		t.Fatalf("kv2 without field: %v", err)
+	}
+	if got != "tok" && got != "other" {
+		t.Fatalf("kv2 without field = %q, want one of the inner strings", got)
+	}
+
+	kv1 := map[string]interface{}{"password": "secret"}
+	got, err = selectSecretValue(kv1, "", "secret/database-url")
+	if err != nil {
+		t.Fatalf("kv1: %v", err)
+	}
+	if got != "secret" {
+		t.Fatalf("kv1 = %q, want secret", got)
+	}
+
+	// A map under "data" without metadata is KV v1 user data, not a KV v2 envelope.
+	notV2 := map[string]interface{}{
+		"data":  map[string]interface{}{"inner": "x"},
+		"other": "y",
+	}
+	got, err = selectSecretValue(notV2, "", "secret/plain")
+	if err != nil {
+		t.Fatalf("non-kv2 map: %v", err)
+	}
+	if got != "y" {
+		t.Fatalf("non-kv2 map = %q, want y", got)
+	}
+}

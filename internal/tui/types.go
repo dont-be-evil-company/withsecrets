@@ -3,7 +3,7 @@ package tui
 import (
 	"charm.land/bubbles/v2/list"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 )
 
 func isPathKind(kind string) bool {

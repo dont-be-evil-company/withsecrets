@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 )
 
 func TestParseKsvcFile_ParsesEnvAndSecrets(t *testing.T) {

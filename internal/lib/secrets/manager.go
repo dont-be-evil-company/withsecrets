@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/lib/cache"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/cache"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
 )
 
 // SecretManager defines the interface for secret management operations
@@ -184,6 +184,9 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 	// Group mappings by provider/project/region for secret-based mappings
 	providerGroups := make(map[fetchKey][]string)
 
+	// OpenBao field selections are fetched per env var so two fields of one secret stay distinct.
+	fieldGroups := make(map[fetchKey][]config.EnvItem)
+
 	// Group mappings by provider/project/region for path-based mappings
 	pathGroups := make(map[fetchKey]map[string][]string)
 
@@ -209,8 +212,13 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 
 		// Process secret-based mappings (single key)
 		if envItem.SecretKey != "" {
-			logger.Debug("Adding secret-based mapping to provider group", "provider", key.provider, "project", key.project, "region", key.region, "secret_key", envItem.SecretKey)
-			providerGroups[key] = append(providerGroups[key], envItem.SecretKey)
+			if envItem.Field != "" {
+				logger.Debug("Adding field mapping", "provider", key.provider, "project", key.project, "region", key.region, "secret_key", envItem.SecretKey, "field", envItem.Field)
+				fieldGroups[key] = append(fieldGroups[key], envItem)
+			} else {
+				logger.Debug("Adding secret-based mapping to provider group", "provider", key.provider, "project", key.project, "region", key.region, "secret_key", envItem.SecretKey)
+				providerGroups[key] = append(providerGroups[key], envItem.SecretKey)
+			}
 		}
 
 		// Process path-based mappings
@@ -238,7 +246,7 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 		}
 	}
 
-	logger.Debug("Provider groups created", "secret_providers", len(providerGroups), "path_providers", len(pathGroups), "param_providers", len(paramGroups), "param_path_providers", len(paramPathGroups))
+	logger.Debug("Provider groups created", "secret_providers", len(providerGroups), "field_providers", len(fieldGroups), "path_providers", len(pathGroups), "param_providers", len(paramGroups), "param_path_providers", len(paramPathGroups))
 
 	// Fetch secrets from each provider
 	allSecrets := make(map[string]string)
@@ -268,7 +276,7 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 		logger.Debug("Successfully retrieved secrets from provider", "provider", key.provider, "project", key.project, "region", key.region, "retrieved_count", len(secrets))
 
 		for _, envItem := range envItems {
-			if envItem.SecretKey != "" {
+			if envItem.SecretKey != "" && envItem.Field == "" {
 				itemKey := resolveFetchKey(env, envItem)
 				if itemKey == key {
 					if secretValue, exists := secrets[envItem.SecretKey]; exists {
@@ -280,6 +288,32 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 					}
 				}
 			}
+		}
+	}
+
+	for key, items := range fieldGroups {
+		secretManager, err := f.CreateSecretManager(ctx, key.provider, key.project, key.region)
+		if err != nil {
+			fmt.Printf("Warning: failed to create secret manager for %s: %v\n", key.provider, err)
+			continue
+		}
+		defer secretManager.Close()
+
+		reader, ok := secretManager.(secretFieldReader)
+		if !ok {
+			fmt.Printf("Warning: provider %s does not support field selection\n", key.provider)
+			continue
+		}
+
+		for _, envItem := range items {
+			secretValue, err := reader.GetSecretField(key.project, envItem.SecretKey, envItem.Field)
+			if err != nil {
+				fmt.Printf("Warning: failed to get field '%s' from secret '%s': %v\n", envItem.Field, envItem.SecretKey, err)
+				continue
+			}
+			allSecrets[envItem.EnvironmentVariable] = secretValue
+			sourceRefs[envItem.EnvironmentVariable] = envItem.SecretKey
+			logger.Debug("Mapped secret field to environment variable", "env_var", envItem.EnvironmentVariable, "secret_key", envItem.SecretKey, "field", envItem.Field, "provider", key.provider, "project", key.project, "region", key.region)
 		}
 	}
 
@@ -395,6 +429,11 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 	}
 
 	return allSecrets, sourceRefs, nil
+}
+
+// secretFieldReader is implemented by providers that can select one key from a secret.
+type secretFieldReader interface {
+	GetSecretField(projectID, secretID, field string) (string, error)
 }
 
 // fetchKey identifies a provider client instance (provider + project + region).

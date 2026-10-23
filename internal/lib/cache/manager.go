@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
 )
 
 // Manager handles caching operations with global and environment-specific settings

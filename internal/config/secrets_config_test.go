@@ -405,6 +405,92 @@ func TestValidateConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "valid openbao field",
+			config: &SecretsConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "openbao",
+						Env: map[string]EnvItem{
+							"MY_TOKEN": {SecretKey: "key", Field: "MY_TOKEN"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "openbao field allowed when item provider overrides another environment",
+			config: &SecretsConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "gcp",
+						Project:  "test-project",
+						Env: map[string]EnvItem{
+							"MY_TOKEN": {SecretKey: "key", Field: "MY_TOKEN", Provider: "openbao"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "field rejected for aws",
+			config: &SecretsConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "aws",
+						Env: map[string]EnvItem{
+							"MY_TOKEN": {SecretKey: "key", Field: "MY_TOKEN"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "field rejected for gcp",
+			config: &SecretsConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "gcp",
+						Project:  "test-project",
+						Env: map[string]EnvItem{
+							"MY_TOKEN": {SecretKey: "key", Field: "MY_TOKEN"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "field rejected when openbao item overrides provider away from openbao",
+			config: &SecretsConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "openbao",
+						Env: map[string]EnvItem{
+							"MY_TOKEN": {SecretKey: "key", Field: "MY_TOKEN", Provider: "aws"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "field rejected without secret-key",
+			config: &SecretsConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "openbao",
+						Env: map[string]EnvItem{
+							"MY_TOKEN": {Field: "MY_TOKEN", Value: "literal"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "cannot combine secret-key and param-key",
 			config: &SecretsConfig{
 				Environments: map[string]Environment{
@@ -1249,4 +1335,12 @@ default:
 		require.Equal(t, []string{"/shared", "/overrides"}, env.Env["*"].SecretPath)
 		require.Equal(t, []string{"/db"}, env.Env["DB"].ParamPath)
 	})
+}
+
+func TestEnvItemUnmarshalsOpenBaoField(t *testing.T) {
+	var item EnvItem
+	err := yaml.Unmarshal([]byte("secret-key: key\nfield: MY_TOKEN\n"), &item)
+	require.NoError(t, err)
+	require.Equal(t, "key", item.SecretKey)
+	require.Equal(t, "MY_TOKEN", item.Field)
 }

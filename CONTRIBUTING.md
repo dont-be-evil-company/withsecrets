@@ -46,7 +46,7 @@ here are a few things we expect from you (and that you should expect from others
 ## How to contribute
 
 If you'd like to contribute,
-start by searching through the [pull requests](https://github.com/mistweaverco/withsecrets/pulls) to
+start by searching through the [pull requests](https://github.com/dont-be-evil-company/withsecrets/pulls) to
 see whether someone else has raised a similar idea or question.
 
 If you don't see your idea listed, and you think it fits into the goals of this guide, open a pull request.
@@ -91,8 +91,8 @@ Release builds run `build-gui.sh` automatically via `scripts/build.sh`.
 
 Discussions about the diffconflict.snvim take place on:
 
-- This repository's [Issues](https://github.com/mistweaverco/withsecrets/issues) and
-  [Pull Requests](https://github.com/mistweaverco/withsecrets/pulls) sections
+- This repository's [Issues](https://github.com/dont-be-evil-company/withsecrets/issues) and
+  [Pull Requests](https://github.com/dont-be-evil-company/withsecrets/pulls) sections
 - The [mistwieaverco discord server](https://mistweaverco.com/discord)
 
 Anybody is welcome to join these conversations.

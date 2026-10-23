@@ -3,8 +3,8 @@ package tui
 import (
 	"strings"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/guiapi"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/guiapi"
 )
 
 type createInput struct {

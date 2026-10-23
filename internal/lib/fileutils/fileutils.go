@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/templates"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/templates"
 	"github.com/spf13/afero"
 )
 
@@ -131,13 +131,10 @@ func GenerateDefaultConfig() bool {
 }
 
 // GetAppDataPath returns the path to the app data directory.
-// WS_HOME is preferred; KUBA_HOME is supported for backwards compatibility.
+// WS_HOME overrides the default user config directory.
 func GetAppDataPath() string {
 	if wsHome := fileSystem.Getenv("WS_HOME"); wsHome != "" {
 		return EnsureDirExists(wsHome)
-	}
-	if kubaHome := fileSystem.Getenv("KUBA_HOME"); kubaHome != "" {
-		return EnsureDirExists(kubaHome)
 	}
 	userConfigDir, err := fileSystem.UserConfigDir()
 	if err != nil {

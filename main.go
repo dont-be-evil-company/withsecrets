@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/mistweaverco/withsecrets/cmd/ws"
-	"github.com/mistweaverco/withsecrets/internal/lib/fileutils"
+	"github.com/dont-be-evil-company/withsecrets/cmd/ws"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/fileutils"
 )
 
 func main() {

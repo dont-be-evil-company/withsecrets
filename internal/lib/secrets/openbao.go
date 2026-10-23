@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	vault "github.com/openbao/openbao/api/v2"
@@ -13,6 +14,13 @@ import (
 type OpenBaoManager struct {
 	client *vault.Client
 	ctx    context.Context
+	mounts map[string]kvMount
+}
+
+// kvMount is a KV secrets engine mount discovered from sys/internal/ui/mounts.
+type kvMount struct {
+	path    string
+	version string
 }
 
 // NewOpenBaoManager creates a new OpenBao client
@@ -49,37 +57,192 @@ func NewOpenBaoManager(ctx context.Context, address string, token string, namesp
 	return &OpenBaoManager{
 		client: client,
 		ctx:    ctx,
+		mounts: map[string]kvMount{},
 	}, nil
 }
 
-// GetSecret retrieves a secret from OpenBao
+// GetSecret retrieves a secret from OpenBao.
+// projectID is a path prefix. KV v2 responses are unwrapped before a value is chosen.
 func (o *OpenBaoManager) GetSecret(projectID, secretID string) (string, error) {
-	// In OpenBao, we use the secret path (secretID) to retrieve the secret
-	// The projectID can be used as a namespace prefix if needed
+	data, secretPath, err := o.readSecretData(projectID, secretID)
+	if err != nil {
+		return "", err
+	}
+	return selectSecretValue(data, "", secretPath)
+}
+
+// GetSecretField retrieves one key from an OpenBao secret, like `bao kv get -field`.
+func (o *OpenBaoManager) GetSecretField(projectID, secretID, field string) (string, error) {
+	data, secretPath, err := o.readSecretData(projectID, secretID)
+	if err != nil {
+		return "", err
+	}
+	return selectSecretValue(data, field, secretPath)
+}
+
+func (o *OpenBaoManager) readSecretData(projectID, secretID string) (map[string]interface{}, string, error) {
 	secretPath := secretID
 	if projectID != "" {
 		secretPath = fmt.Sprintf("%s/%s", projectID, secretID)
 	}
 
-	// Read the secret from OpenBao
-	secret, err := o.client.Logical().Read(secretPath)
+	readPath := o.kvDataPath(secretPath)
+	secret, err := o.client.Logical().Read(readPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to read secret '%s': %w", secretPath, err)
+		return nil, readPath, fmt.Errorf("failed to read secret '%s': %w", readPath, err)
+	}
+	if isVersionedKVPathError(secret) {
+		if alt, ok := insertKV2DataSegment(secretPath); ok && alt != readPath {
+			readPath = alt
+			secret, err = o.client.Logical().Read(readPath)
+			if err != nil {
+				return nil, readPath, fmt.Errorf("failed to read secret '%s': %w", readPath, err)
+			}
+		}
+	}
+	if secret == nil || isVersionedKVPathError(secret) {
+		return nil, readPath, fmt.Errorf("secret '%s' not found", secretPath)
+	}
+	return secret.Data, readPath, nil
+}
+
+// kvDataPath inserts the KV v2 /data/ segment after the mount when the joined
+// path does not already include it. KV v1 paths and explicit /data/ paths are unchanged.
+func (o *OpenBaoManager) kvDataPath(fullPath string) string {
+	mount, ok := o.lookupKVMount(fullPath)
+	if !ok || mount.version != "2" {
+		return fullPath
+	}
+	return kv2DataPath(fullPath, mount.path)
+}
+
+func (o *OpenBaoManager) lookupKVMount(fullPath string) (kvMount, bool) {
+	if info, ok := cachedKVMount(o.mounts, fullPath); ok {
+		return info, info.version != ""
 	}
 
+	secret, err := o.client.Logical().Read("sys/internal/ui/mounts/" + strings.Trim(fullPath, "/"))
+	if err != nil || secret == nil || secret.Data == nil {
+		return kvMount{}, false
+	}
+	mountType, _ := secret.Data["type"].(string)
+	mountPath, _ := secret.Data["path"].(string)
+	version := ""
+	if opts, ok := secret.Data["options"].(map[string]interface{}); ok {
+		version, _ = opts["version"].(string)
+	}
+	if mountType != "kv" {
+		version = ""
+	}
+	info := kvMount{path: mountPath, version: version}
+	if mountPath != "" {
+		o.mounts[mountPath] = info
+	}
+	if mountType != "kv" || version == "" {
+		return kvMount{}, false
+	}
+	return info, true
+}
+
+func cachedKVMount(mounts map[string]kvMount, fullPath string) (kvMount, bool) {
+	fullPath = strings.Trim(fullPath, "/")
+	var best kvMount
+	found := false
+	for path, info := range mounts {
+		prefix := strings.Trim(path, "/")
+		if prefix == "" {
+			continue
+		}
+		if fullPath == prefix || strings.HasPrefix(fullPath, prefix+"/") {
+			if !found || len(prefix) > len(strings.Trim(best.path, "/")) {
+				best = info
+				found = true
+			}
+		}
+	}
+	return best, found
+}
+
+// kv2DataPath returns the KV v2 read path for a logical secret path.
+// fullPath secretv2/withsecrets/foo/bar and mount secretv2 become secretv2/data/withsecrets/foo/bar.
+// A path that already contains /data/ after the mount is returned unchanged.
+func kv2DataPath(fullPath, mountPath string) string {
+	fullPath = strings.Trim(fullPath, "/")
+	mountPath = strings.Trim(mountPath, "/")
+	if fullPath == "" || mountPath == "" {
+		return fullPath
+	}
+	if fullPath != mountPath && !strings.HasPrefix(fullPath, mountPath+"/") {
+		return fullPath
+	}
+	rel := strings.TrimPrefix(fullPath, mountPath)
+	rel = strings.TrimPrefix(rel, "/")
+	if rel == "" || rel == "data" || strings.HasPrefix(rel, "data/") {
+		return fullPath
+	}
+	return mountPath + "/data/" + rel
+}
+
+// insertKV2DataSegment inserts /data/ after the first path segment.
+// Used when mount discovery is unavailable and OpenBao reports a versioned KV path.
+func insertKV2DataSegment(fullPath string) (string, bool) {
+	fullPath = strings.Trim(fullPath, "/")
+	parts := strings.Split(fullPath, "/")
+	if len(parts) < 2 || parts[0] == "" || parts[1] == "data" {
+		return fullPath, false
+	}
+	rewritten := append([]string{parts[0], "data"}, parts[1:]...)
+	return strings.Join(rewritten, "/"), true
+}
+
+func isVersionedKVPathError(secret *vault.Secret) bool {
 	if secret == nil {
-		return "", fmt.Errorf("secret '%s' not found", secretPath)
+		return false
 	}
+	for _, warning := range secret.Warnings {
+		if strings.Contains(warning, "Invalid path for a versioned K/V") {
+			return true
+		}
+	}
+	return false
+}
 
-	// OpenBao secrets are stored as key-value pairs
-	// We'll return the first value we find, or an error if no values exist
-	if len(secret.Data) == 0 {
+// unwrapKV2Data returns the inner KV v2 data map when the response has both
+// data and metadata. Other shapes, including KV v1, are returned unchanged.
+func unwrapKV2Data(data map[string]interface{}) map[string]interface{} {
+	if data == nil {
+		return nil
+	}
+	inner, ok := data["data"].(map[string]interface{})
+	if !ok {
+		return data
+	}
+	if _, hasMeta := data["metadata"]; !hasMeta {
+		return data
+	}
+	return inner
+}
+
+func selectSecretValue(data map[string]interface{}, field, secretPath string) (string, error) {
+	values := unwrapKV2Data(data)
+	if len(values) == 0 {
 		return "", fmt.Errorf("secret '%s' has no data", secretPath)
 	}
 
-	// If there's only one key-value pair, return its value
-	if len(secret.Data) == 1 {
-		for _, value := range secret.Data {
+	if field != "" {
+		value, ok := values[field]
+		if !ok {
+			return "", fmt.Errorf("secret '%s' has no field '%s'", secretPath, field)
+		}
+		str, ok := value.(string)
+		if !ok {
+			return "", fmt.Errorf("secret '%s' field '%s' is not a string", secretPath, field)
+		}
+		return str, nil
+	}
+
+	if len(values) == 1 {
+		for _, value := range values {
 			if str, ok := value.(string); ok {
 				return str, nil
 			}
@@ -87,14 +250,12 @@ func (o *OpenBaoManager) GetSecret(projectID, secretID string) (string, error) {
 		}
 	}
 
-	// If there are multiple key-value pairs, return the first string value
-	for _, value := range secret.Data {
+	for _, value := range values {
 		if str, ok := value.(string); ok {
 			return str, nil
 		}
 	}
 
-	// If no string values found, return an error
 	return "", fmt.Errorf("secret '%s' contains no string values", secretPath)
 }
 

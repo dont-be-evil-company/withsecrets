@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 )
 
 func (m *Model) newEditForm() *huh.Form {

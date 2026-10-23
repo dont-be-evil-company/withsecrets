@@ -7,7 +7,7 @@ import (
 )
 
 func TestTemplateNameValidationAndExistingPath(t *testing.T) {
-	t.Setenv("KUBA_HOME", t.TempDir())
+	t.Setenv("WS_HOME", t.TempDir())
 
 	if err := ValidateTemplateName("foo/bar"); err == nil {
 		t.Fatalf("expected invalid template name with slash")
@@ -41,7 +41,7 @@ func TestTemplateNameValidationAndExistingPath(t *testing.T) {
 }
 
 func TestListTemplateNames(t *testing.T) {
-	t.Setenv("KUBA_HOME", t.TempDir())
+	t.Setenv("WS_HOME", t.TempDir())
 	dir, err := EnsureTemplatesDir()
 	if err != nil {
 		t.Fatalf("EnsureTemplatesDir failed: %v", err)

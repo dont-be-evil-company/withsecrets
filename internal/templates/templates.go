@@ -76,10 +76,6 @@ func appDataPath() string {
 		_ = os.MkdirAll(wsHome, 0755)
 		return wsHome
 	}
-	if kubaHome := os.Getenv("KUBA_HOME"); kubaHome != "" {
-		_ = os.MkdirAll(kubaHome, 0755)
-		return kubaHome
-	}
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
 		panic(err)

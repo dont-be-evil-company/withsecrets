@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/gui"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/gui"
 	"github.com/spf13/cobra"
 )
 

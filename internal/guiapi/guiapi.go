@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/lib/secrets"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/secrets"
 )
 
 var errUnexpectedGCPManager = fmt.Errorf("unexpected gcp secret manager type")

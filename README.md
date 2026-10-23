@@ -6,14 +6,14 @@
 
 CLI: **`ws`**
 
-[![Made with love](assets/badge-made-with-love.svg)](https://github.com/mistweaverco/withsecrets/graphs/contributors)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mistweaverco/withsecrets?style=for-the-badge)](https://github.com/mistweaverco/withsecrets/releases/latest)
-[![Development status)](assets/badge-development-status.svg)](https://github.com/orgs/mistweaverco/projects/5/views/1?filterQuery=repo%3Amistweaverco%2Fwithsecrets)
-[![License](https://img.shields.io/github/license/mistweaverco/withsecrets?style=for-the-badge)](./LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/mistweaverco/withsecrets?style=for-the-badge)](https://github.com/mistweaverco/withsecrets/issues)
+[![Made with love](assets/badge-made-with-love.svg)](https://github.com/dont-be-evil-company/withsecrets/graphs/contributors)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/dont-be-evil-company/withsecrets?style=for-the-badge)](https://github.com/dont-be-evil-company/withsecrets/releases/latest)
+[![Development status)](assets/badge-development-status.svg)](https://github.com/orgs/mistweaverco/projects/5/views/1?filterQuery=repo%3Adont-be-evil-company%2Fwithsecrets)
+[![License](https://img.shields.io/github/license/dont-be-evil-company/withsecrets?style=for-the-badge)](./LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/dont-be-evil-company/withsecrets?style=for-the-badge)](https://github.com/dont-be-evil-company/withsecrets/issues)
 [![Discord](assets/badge-discord.svg)](https://mistweaverco.com/discord)
 
-[Why?](#why) • [Installation](#installation) • [Usage](#usage) • [Migrating from kuba](#migrating-from-kuba)
+[Why?](#why) • [Installation](#installation) • [Usage](#usage)
 
 <p></p>
 
@@ -109,7 +109,7 @@ withsecrets is a single binary, so you can install it easily.
 
 ### Manual installation
 
-Download the latest release from [GitHub Releases](https://github.com/mistweaverco/withsecrets/releases/latest).
+Download the latest release from [GitHub Releases](https://github.com/dont-be-evil-company/withsecrets/releases/latest).
 
 ### Automatic Linux and macOS installation
 
@@ -129,18 +129,14 @@ iwr https://withsecrets.com/install.ps1 -useb | iex
 
 ## Migrating from kuba
 
-kuba has been renamed to **withsecrets**. The CLI is now **`ws`**.
+kuba has been renamed to **withsecrets**. Compatibility with the old command, config file, and paths has been removed.
 
-| kuba (legacy)     | withsecrets (new)                                                  |
-| ----------------- | ------------------------------------------------------------------ |
-| `kuba` command    | `ws` command (`kuba` still works via compatibility binary/symlink) |
-| `kuba.yaml`       | `ws.yaml` (also accepts `withsecrets.yaml` and `kuba.yaml`)        |
-| `~/.config/kuba/` | `~/.config/withsecrets/` (reads legacy path automatically)         |
-| `KUBA_HOME`       | `WS_HOME` (also accepts `KUBA_HOME`)                               |
-| `kuba update`     | Downloads from `mistweaverco/withsecrets` and keeps working        |
+- The command is `ws`.
+- Project config is `ws.yaml` or `withsecrets.yaml`.
+- Global config is `~/.config/withsecrets/`.
+- `WS_HOME` overrides the app data directory.
 
-No immediate action is required: existing `kuba.yaml` files and `kuba` commands continue to work.
-New projects should use `ws.yaml` and the `ws` command.
+Existing `kuba.yaml` files, `KUBA_HOME`, `~/.config/kuba/`, and the `kuba` command are no longer read or installed.
 
 ## Usage
 
@@ -701,7 +697,7 @@ withsecrets supports Bitwarden Secrets Manager via the official Bitwarden Go SDK
    internal session data), you can point it at a state file:
 
    ```sh
-   export BITWARDEN_STATE_FILE="$HOME/.local/share/kuba/bitwarden_state.json"
+   export BITWARDEN_STATE_FILE="$HOME/.local/share/withsecrets/bitwarden_state.json"
    ```
 
    When this variable is set:
@@ -890,13 +886,16 @@ To use OpenBao:
          value: "hard-coded-value"
    ```
 
-**Note**: OpenBao secrets are stored as key-value pairs. If a secret contains multiple keys, withsecrets will return the first string value it finds. For more precise control, structure your secrets with single values or use the project field to namespace your secrets:
+**Note**: `project` is a path prefix and `secret-key` is the rest of the secret path. For a KV v2 mount, withsecrets inserts the `/data/` API segment after the mount (so `project: secretv2` and `secret-key: withsecrets/foo/bar` read `secretv2/data/withsecrets/foo/bar`). A path that already contains `/data/` is left as-is. The KV v2 response is unwrapped from `data.data`.
+
+If a secret contains one string, that value is returned. If it contains several, set `field` to choose one key (the same as `bao kv get -field`). Without `field`, withsecrets returns the first string value it finds.
 
 ```yaml
 default:
   provider: openbao
+  project: secretv2
   env:
-    DATABASE_URL:
-      secret-key: "database-url"
-      project: "secret" # This will look for secret/database-url
+    FOOBAR:
+      secret-key: "withsecrets/foo/bar"
+      field: "password"
 ```

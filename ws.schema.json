@@ -41,6 +41,10 @@
               "type": "object",
               "properties": {
                 "secret-key": { "type": "string" },
+                "field": {
+                  "type": "string",
+                  "description": "OpenBao KV key to return from the secret (like `bao kv get -field`). Only valid with provider openbao and secret-key."
+                },
                 "secret-path": {
                   "description": "Secret path prefix for bulk loading. A string or an ordered list of strings; later paths overlay earlier ones on name collisions.",
                   "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" }, "minItems": 1 }]
@@ -90,6 +94,17 @@
                       { "required": ["value"] }
                     ]
                   }
+                },
+                {
+                  "if": { "required": ["field"] },
+                  "then": { "required": ["secret-key"] }
+                },
+                {
+                  "if": {
+                    "required": ["provider"],
+                    "properties": { "provider": { "not": { "const": "openbao" } } }
+                  },
+                  "then": { "not": { "required": ["field"] } }
                 }
               ],
               "additionalProperties": false
@@ -191,6 +206,27 @@
                     "not": {
                       "anyOf": [{ "required": ["param-path"] }]
                     }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "not": { "const": "openbao" }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "env": {
+                "patternProperties": {
+                  "^[A-Z0-9_]+$": {
+                    "if": { "not": { "required": ["provider"] } },
+                    "then": { "not": { "required": ["field"] } }
                   }
                 }
               }

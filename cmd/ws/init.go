@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/lib/fileutils"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
-	"github.com/mistweaverco/withsecrets/internal/templates"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/fileutils"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/templates"
 	"github.com/spf13/cobra"
 )
 

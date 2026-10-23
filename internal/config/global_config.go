@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mistweaverco/withsecrets/internal/lib/cache"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/cache"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -80,7 +80,7 @@ func DefaultGlobalConfig() *GlobalConfig {
 	}
 }
 
-// LoadGlobalConfig loads the global configuration from .config/kuba/config.yaml
+// LoadGlobalConfig loads the global configuration from .config/withsecrets/config.yaml
 func LoadGlobalConfig() (*GlobalConfig, error) {
 	logger := log.NewLogger()
 
@@ -91,18 +91,11 @@ func LoadGlobalConfig() (*GlobalConfig, error) {
 	}
 
 	configPath := filepath.Join(GlobalConfigDir(homeDir), "config.yaml")
-	legacyPath := filepath.Join(LegacyGlobalConfigDir(homeDir), "config.yaml")
 	logger.Debug("Loading global configuration", "path", configPath)
 
-	// Check if config file exists (prefer new path, fall back to legacy kuba path)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		if _, legacyErr := os.Stat(legacyPath); legacyErr == nil {
-			configPath = legacyPath
-			logger.Debug("Using legacy global configuration path", "path", configPath)
-		} else {
-			logger.Debug("Global configuration file not found, using defaults")
-			return DefaultGlobalConfig(), nil
-		}
+		logger.Debug("Global configuration file not found, using defaults")
+		return DefaultGlobalConfig(), nil
 	}
 
 	// Read file
@@ -128,7 +121,7 @@ func LoadGlobalConfig() (*GlobalConfig, error) {
 	return &config, nil
 }
 
-// SaveGlobalConfig saves the global configuration to .config/kuba/config.yaml
+// SaveGlobalConfig saves the global configuration to .config/withsecrets/config.yaml
 func SaveGlobalConfig(config *GlobalConfig) error {
 	logger := log.NewLogger()
 
@@ -170,15 +163,6 @@ func GetCacheDir() (string, error) {
 	}
 
 	cacheDir := CacheDir(homeDir)
-	legacyCacheDir := LegacyCacheDir(homeDir)
-	legacyDB := filepath.Join(legacyCacheDir, "db.sqlite")
-	newDB := filepath.Join(cacheDir, "db.sqlite")
-
-	if _, err := os.Stat(newDB); os.IsNotExist(err) {
-		if _, legacyErr := os.Stat(legacyDB); legacyErr == nil {
-			return legacyCacheDir, nil
-		}
-	}
 
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create cache directory: %w", err)

@@ -118,7 +118,7 @@
 		</p>
 		<div class="flex gap-4 justify-center">
 			<a href="/installation" class="btn btn-primary btn-lg">Install ws</a>
-			<a href="https://github.com/mistweaverco/withsecrets" class="btn btn-outline btn-lg"
+			<a href="https://github.com/dont-be-evil-company/withsecrets" class="btn btn-outline btn-lg"
 				>View on GitHub</a
 			>
 		</div>

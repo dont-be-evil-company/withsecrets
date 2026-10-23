@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
-	"github.com/mistweaverco/withsecrets/internal/lib/version"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/version"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +60,7 @@ func getLatestVersion() (string, error) {
 	}
 
 	// Get the latest release
-	resp, err := client.Get("https://api.github.com/repos/mistweaverco/withsecrets/releases/latest")
+	resp, err := client.Get("https://api.github.com/repos/dont-be-evil-company/withsecrets/releases/latest")
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch latest release: %w", err)
 	}
@@ -124,7 +124,7 @@ func compareVersions(v1, v2 string) int {
 	return 0
 }
 
-// getCurrentBinaryPath returns the path to the current kuba binary
+// getCurrentBinaryPath returns the path to the current ws binary
 func getCurrentBinaryPath() (string, error) {
 	execPath, err := os.Executable()
 	if err != nil {
@@ -173,7 +173,7 @@ func downloadBinary(version, platform string) (string, error) {
 		fileName += ".exe"
 	}
 
-	downloadURL := fmt.Sprintf("https://github.com/mistweaverco/withsecrets/releases/download/%s/%s", version, fileName)
+	downloadURL := fmt.Sprintf("https://github.com/dont-be-evil-company/withsecrets/releases/download/%s/%s", version, fileName)
 
 	// Create temporary file
 	tempFile, err := os.CreateTemp("", "withsecrets-update-*")
@@ -280,7 +280,7 @@ func replaceBinaryWindows(currentPath, newBinaryPath string) error {
 		return fmt.Errorf("failed to stage new binary: %w", err)
 	}
 
-	scriptFile, err := os.CreateTemp("", "kuba-update-*.ps1")
+	scriptFile, err := os.CreateTemp("", "ws-update-*.ps1")
 	if err != nil {
 		_ = os.Remove(stagedPath)
 		return fmt.Errorf("failed to create updater script: %w", err)

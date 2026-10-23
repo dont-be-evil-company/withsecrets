@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mistweaverco/withsecrets/internal/templates"
+	"github.com/dont-be-evil-company/withsecrets/internal/templates"
 )
 
 func TestInitUsesUserDefaultTemplate(t *testing.T) {
 	wd := t.TempDir()
 	home := t.TempDir()
-	t.Setenv("KUBA_HOME", home)
+	t.Setenv("WS_HOME", home)
 
 	dir, err := templates.EnsureTemplatesDir()
 	if err != nil {
@@ -44,7 +44,7 @@ func TestInitUsesUserDefaultTemplate(t *testing.T) {
 func TestInitWithMissingTemplateListsAvailable(t *testing.T) {
 	wd := t.TempDir()
 	home := t.TempDir()
-	t.Setenv("KUBA_HOME", home)
+	t.Setenv("WS_HOME", home)
 
 	dir, err := templates.EnsureTemplatesDir()
 	if err != nil {

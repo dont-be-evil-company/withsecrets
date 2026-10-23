@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mistweaverco/withsecrets/internal/templates"
+	"github.com/dont-be-evil-company/withsecrets/internal/templates"
 	"github.com/spf13/cobra"
 )
 

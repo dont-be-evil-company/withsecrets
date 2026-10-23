@@ -8,7 +8,7 @@ import (
 )
 
 func TestResolveInitTemplateFallsBackToEmbeddedDefault(t *testing.T) {
-	t.Setenv("KUBA_HOME", t.TempDir())
+	t.Setenv("WS_HOME", t.TempDir())
 
 	body, source, err := ResolveInitTemplate("")
 	if err != nil {
@@ -24,7 +24,7 @@ func TestResolveInitTemplateFallsBackToEmbeddedDefault(t *testing.T) {
 
 func TestResolveInitTemplateUsesUserDefaultTemplateWhenPresent(t *testing.T) {
 	home := t.TempDir()
-	t.Setenv("KUBA_HOME", home)
+	t.Setenv("WS_HOME", home)
 
 	dir, err := EnsureTemplatesDir()
 	if err != nil {
@@ -50,7 +50,7 @@ func TestResolveInitTemplateUsesUserDefaultTemplateWhenPresent(t *testing.T) {
 
 func TestResolveInitTemplateWithExplicitName(t *testing.T) {
 	home := t.TempDir()
-	t.Setenv("KUBA_HOME", home)
+	t.Setenv("WS_HOME", home)
 
 	dir, err := EnsureTemplatesDir()
 	if err != nil {

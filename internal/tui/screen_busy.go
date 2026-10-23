@@ -4,7 +4,7 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 )
 
 func (m *Model) updateBusy(msg tea.Msg) (tea.Model, tea.Cmd) {

@@ -33,54 +33,6 @@ func TestInitSchemaUsesConfigEnvColumn(t *testing.T) {
 	}
 }
 
-func TestDropLegacySchemaRecreatesWithoutMigratingRows(t *testing.T) {
-	dir := t.TempDir()
-	dbPath := filepath.Join(dir, "db.sqlite")
-
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-
-	legacySchema := `
-	CREATE TABLE secrets (
-		path TEXT NOT NULL,
-		kuba_env TEXT NOT NULL,
-		env TEXT NOT NULL,
-		value TEXT NOT NULL,
-		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		expires_at DATETIME NOT NULL,
-		PRIMARY KEY (path, kuba_env, env)
-	);`
-	if _, err := db.Exec(legacySchema); err != nil {
-		t.Fatalf("create legacy schema: %v", err)
-	}
-	if _, err := db.Exec(
-		`INSERT INTO secrets (path, kuba_env, env, value, expires_at) VALUES (?, ?, ?, ?, ?)`,
-		"/tmp/ws.yaml", "default", "FOO", "secret", time.Now().Add(time.Hour),
-	); err != nil {
-		t.Fatalf("seed legacy row: %v", err)
-	}
-
-	cache := &Cache{db: db}
-	if err := cache.initSchema(); err != nil {
-		t.Fatalf("initSchema: %v", err)
-	}
-
-	if !tableHasColumn(t, db, "secrets", "config_env") {
-		t.Fatalf("expected recreated secrets.config_env column")
-	}
-
-	var count int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM secrets`).Scan(&count); err != nil {
-		t.Fatalf("count rows: %v", err)
-	}
-	if count != 0 {
-		t.Fatalf("expected legacy cache rows to be discarded, got %d", count)
-	}
-}
-
 func tableHasColumn(t *testing.T, db *sql.DB, table, column string) bool {
 	t.Helper()
 	rows, err := db.Query(`PRAGMA table_info(` + table + `)`)

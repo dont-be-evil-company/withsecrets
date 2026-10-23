@@ -10,7 +10,7 @@ import (
 func TestGenerateDefaultConfigUsesUserDefaultTemplate(t *testing.T) {
 	wd := t.TempDir()
 	home := t.TempDir()
-	t.Setenv("KUBA_HOME", home)
+	t.Setenv("WS_HOME", home)
 
 	templatesDir := filepath.Join(home, "templates")
 	if err := os.MkdirAll(templatesDir, 0755); err != nil {
@@ -42,7 +42,7 @@ func TestGenerateDefaultConfigUsesUserDefaultTemplate(t *testing.T) {
 
 func TestGenerateDefaultConfigFallsBackToEmbeddedTemplate(t *testing.T) {
 	wd := t.TempDir()
-	t.Setenv("KUBA_HOME", t.TempDir())
+	t.Setenv("WS_HOME", t.TempDir())
 
 	oldWD, _ := os.Getwd()
 	if err := os.Chdir(wd); err != nil {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
-	"github.com/mistweaverco/withsecrets/internal/lib/secrets"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/secrets"
 	"github.com/spf13/cobra"
 )
 

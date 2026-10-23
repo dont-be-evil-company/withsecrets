@@ -6,7 +6,6 @@
 
 .DESCRIPTION
     Automatically downloads and installs the latest version of ws from GitHub releases.
-    Also creates a kuba.cmd compatibility shim for existing scripts.
 
 .PARAMETER SystemWide
     Install to system-wide location (requires Administrator privileges)
@@ -30,9 +29,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 # GitHub repository details
-$Repo = "mistweaverco/withsecrets"
+$Repo = "dont-be-evil-company/withsecrets"
 $BinaryName = "ws.exe"
-$LegacyBinaryName = "kuba.cmd"
 
 # Colors for output
 $Colors = @{
@@ -163,17 +161,6 @@ function Add-ToPath {
     }
 }
 
-function Install-LegacyShim {
-    param([string]$InstallPath)
-
-    $installDir = Split-Path $InstallPath -Parent
-    $shimPath = Join-Path $installDir $LegacyBinaryName
-    $shimContent = "@echo off`r`n""%~dp0ws.exe"" %*"
-    Set-Content -Path $shimPath -Value $shimContent -Encoding ASCII
-    Write-Status "Created kuba compatibility shim at $shimPath"
-}
-
-# Function to install binary
 function Install-Binary {
     param(
         [string]$SourcePath,
@@ -196,7 +183,6 @@ function Install-Binary {
     try {
         Copy-Item $SourcePath $InstallPath
         Write-Success "$BinaryName installed successfully to $InstallPath"
-        Install-LegacyShim -InstallPath $InstallPath
         Add-ToPath -InstallPath $InstallPath
 
     } catch {
@@ -211,7 +197,7 @@ function Test-Installation {
 
     if (Test-Path $InstallPath) {
         Write-Success "Installation verified successfully!"
-        Write-Status "You can now run: ws --version (or kuba --version via compatibility shim)"
+        Write-Status "You can now run: ws --version"
     } else {
         Write-Error "Installation verification failed"
         exit 1

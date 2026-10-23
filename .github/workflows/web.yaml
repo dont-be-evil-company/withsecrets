@@ -58,8 +58,6 @@ jobs:
               - 'web/**'
               - 'ws.schema.json'
               - 'ws-global.schema.json'
-              - 'kuba.schema.json'
-              - 'kuba-global.schema.json'
 
       - name: Decide whether to deploy
         id: should_deploy
@@ -96,8 +94,6 @@ jobs:
         run: |
           cp ws.schema.json web/static/ws.schema.json
           cp ws-global.schema.json web/static/ws-global.schema.json
-          cp kuba.schema.json web/static/kuba.schema.json
-          cp kuba-global.schema.json web/static/kuba-global.schema.json
       - if: steps.should_deploy.outputs.deploy == 'true'
         name: Install dependencies
         run: cd web && vp install

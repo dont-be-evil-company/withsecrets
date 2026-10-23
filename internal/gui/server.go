@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mistweaverco/withsecrets/internal/guiapi"
+	"github.com/dont-be-evil-company/withsecrets/internal/guiapi"
 )
 
 const (

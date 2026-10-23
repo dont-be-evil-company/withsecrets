@@ -9,7 +9,7 @@ var configCmd = &cobra.Command{
 	Short: "Manage ws configuration",
 	Long: `Manage global ws configuration settings.
 
-This command allows you to configure various aspects of kuba's behavior,
+This command allows you to configure various aspects of withsecrets' behavior,
 including caching, logging, and other global settings.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {

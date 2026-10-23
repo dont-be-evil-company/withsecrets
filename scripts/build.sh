@@ -14,8 +14,7 @@ build_wrapper() {
     extra_ldflags=" -extldflags '-static'"
   fi
   local output="dist/ws-$1-$2$windows_file_extension"
-  GOOS=$1 GOARCH=$2 go build -ldflags "-X 'github.com/mistweaverco/withsecrets/internal/lib/version.VERSION=${VERSION}'${extra_ldflags}" -o "$output"
-  cp "$output" "dist/kuba-$1-$2$windows_file_extension"
+  GOOS=$1 GOARCH=$2 go build -ldflags "-X 'github.com/dont-be-evil-company/withsecrets/internal/lib/version.VERSION=${VERSION}'${extra_ldflags}" -o "$output"
 }
 
 build_linux_arm64() {

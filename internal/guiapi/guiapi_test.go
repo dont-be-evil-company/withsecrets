@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,7 +3,7 @@ package ws
 import (
 	"fmt"
 
-	"github.com/mistweaverco/withsecrets/internal/lib/version"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/version"
 	"github.com/spf13/cobra"
 )
 

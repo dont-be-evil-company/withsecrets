@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
 var configDefaultsCmd = &cobra.Command{
 	Use:   "defaults",
-	Short: "Get/set default values used by kuba",
+	Short: "Get/set default values used by withsecrets",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = cmd.Help()

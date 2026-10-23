@@ -185,7 +185,7 @@
 			{/if}
 		</div>
 		<a
-			href="https://github.com/mistweaverco/withsecrets"
+			href="https://github.com/dont-be-evil-company/withsecrets"
 			class="btn btn-ghost btn-circle"
 			aria-label="View withsecrets on GitHub"
 		>

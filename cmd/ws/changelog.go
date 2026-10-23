@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/glamour"
-	"github.com/mistweaverco/withsecrets/internal/changelog"
+	"github.com/dont-be-evil-company/withsecrets/internal/changelog"
 	"github.com/spf13/cobra"
 )
 

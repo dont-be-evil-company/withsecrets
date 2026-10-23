@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/mistweaverco/withsecrets/internal/lib/cache"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/cache"
 )
 
 type pathMappingKind string

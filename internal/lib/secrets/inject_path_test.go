@@ -3,7 +3,7 @@ package secrets
 import (
 	"testing"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
 )
 
 func TestInjectPathSecrets(t *testing.T) {

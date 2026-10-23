@@ -3,9 +3,9 @@ package guiapi
 import (
 	"time"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/lib/cache"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/cache"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
 )
 
 func cacheSetSecret(configPath, envName, envVar, value string) {

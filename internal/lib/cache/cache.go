@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
 )
 
 const sqliteDateTime = "2006-01-02 15:04:05"
@@ -82,10 +82,6 @@ func (c *Cache) Close() error {
 
 // initSchema initializes the database schema
 func (c *Cache) initSchema() error {
-	if err := c.dropLegacySchema(); err != nil {
-		return err
-	}
-
 	query := `
 	CREATE TABLE IF NOT EXISTS secrets (
 		path TEXT NOT NULL,
@@ -102,55 +98,6 @@ func (c *Cache) initSchema() error {
 
 	_, err := c.db.Exec(query)
 	return err
-}
-
-// dropLegacySchema removes the pre-rebrand secrets table (kuba_env column) without migrating rows.
-func (c *Cache) dropLegacySchema() error {
-	var tableName string
-	err := c.db.QueryRow(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'secrets'`).Scan(&tableName)
-	if err == sql.ErrNoRows {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	rows, err := c.db.Query(`PRAGMA table_info(secrets)`)
-	if err != nil {
-		return err
-	}
-
-	hasLegacyColumn := false
-	for rows.Next() {
-		var (
-			cid       int
-			name      string
-			colType   string
-			notNull   int
-			dfltValue sql.NullString
-			pk        int
-		)
-		if err := rows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
-			_ = rows.Close()
-			return err
-		}
-		if name == "kuba_env" {
-			hasLegacyColumn = true
-		}
-	}
-	if err := rows.Close(); err != nil {
-		return err
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
-
-	if hasLegacyColumn {
-		_, err := c.db.Exec(`DROP TABLE secrets`)
-		return err
-	}
-
-	return nil
 }
 
 // cleanupExpired removes expired entries from the cache
@@ -357,26 +304,14 @@ func (c *Cache) UpdateExpiry(path, configEnv, env string, newTTL time.Duration) 
 	return int(rowsAffected), nil
 }
 
-// getCacheDir returns the cache directory path, preferring withsecrets and
-// falling back to the legacy kuba directory when an existing database is found there.
+// getCacheDir returns the withsecrets cache directory path.
 func getCacheDir() (string, error) {
 	baseDir, err := cacheBaseDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to get cache base directory: %w", err)
 	}
 
-	cacheDir := filepath.Join(baseDir, "withsecrets")
-	legacyCacheDir := filepath.Join(baseDir, "kuba")
-	legacyDB := filepath.Join(legacyCacheDir, "db.sqlite")
-	newDB := filepath.Join(cacheDir, "db.sqlite")
-
-	if _, err := os.Stat(newDB); os.IsNotExist(err) {
-		if _, legacyErr := os.Stat(legacyDB); legacyErr == nil {
-			return legacyCacheDir, nil
-		}
-	}
-
-	return cacheDir, nil
+	return filepath.Join(baseDir, "withsecrets"), nil
 }
 
 func cacheBaseDir() (string, error) {

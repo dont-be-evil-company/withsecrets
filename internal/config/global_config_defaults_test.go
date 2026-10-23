@@ -10,7 +10,7 @@ func TestLoadGlobalConfigParsesDefaultsProvidersRegions(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 
-	cfgDir := filepath.Join(home, ".config", "kuba")
+	cfgDir := filepath.Join(home, ".config", "withsecrets")
 	if err := os.MkdirAll(cfgDir, 0755); err != nil {
 		t.Fatalf("mkdir config dir: %v", err)
 	}

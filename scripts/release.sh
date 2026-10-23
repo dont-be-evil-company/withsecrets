@@ -7,19 +7,15 @@ FILES=()
 
 LINUX_FILES=(
   "dist/ws-linux-amd64"
-  "dist/kuba-linux-amd64"
 )
 
 MACOS_FILES=(
   "dist/ws-darwin-arm64"
-  "dist/kuba-darwin-arm64"
   "dist/ws-darwin-amd64"
-  "dist/kuba-darwin-amd64"
 )
 
 WINDOWS_FILES=(
   "dist/ws-windows-amd64.exe"
-  "dist/kuba-windows-amd64.exe"
 )
 
 check_files_exist() {

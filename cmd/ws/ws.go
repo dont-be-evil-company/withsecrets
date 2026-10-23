@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mistweaverco/withsecrets/internal/config"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
-	"github.com/mistweaverco/withsecrets/internal/lib/version"
+	"github.com/dont-be-evil-company/withsecrets/internal/config"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/version"
 	"github.com/spf13/cobra"
 )
 
@@ -19,8 +19,6 @@ var rootCmd = &cobra.Command{
 	Short: "withsecrets CLI",
 	Long:  "ws is the CLI for withsecrets - access secrets and environment variables from GCP, AWS, Azure, Bitwarden, OpenBao, and more.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		maybeShowDeprecationNotice()
-		cmd.Use = CLIName()
 		log.SetDebugMode(cfg.Flags.Debug)
 	},
 	Run: func(cmd *cobra.Command, files []string) {

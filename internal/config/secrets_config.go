@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mistweaverco/withsecrets/internal/lib/cache"
-	"github.com/mistweaverco/withsecrets/internal/lib/log"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/cache"
+	"github.com/dont-be-evil-company/withsecrets/internal/lib/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -91,6 +91,7 @@ type EnvItem struct {
 	// For string format: just the environment variable name
 	EnvironmentVariable string   `yaml:"environment-variable,omitempty"`
 	SecretKey           string   `yaml:"secret-key,omitempty"`
+	Field               string   `yaml:"field,omitempty"`
 	SecretPath          []string `yaml:"secret-path,omitempty"`
 	ParamKey            string   `yaml:"param-key,omitempty"`
 	ParamPath           []string `yaml:"param-path,omitempty"`
@@ -106,6 +107,7 @@ func (e *EnvItem) UnmarshalYAML(value *yaml.Node) error {
 	// For map syntax, the env var name is the map key; object holds fields only
 	var temp struct {
 		SecretKey  string `yaml:"secret-key,omitempty"`
+		Field      string `yaml:"field,omitempty"`
 		SecretPath any    `yaml:"secret-path,omitempty"`
 		ParamKey   string `yaml:"param-key,omitempty"`
 		ParamPath  any    `yaml:"param-path,omitempty"`
@@ -126,6 +128,7 @@ func (e *EnvItem) UnmarshalYAML(value *yaml.Node) error {
 		return fmt.Errorf("param-path: %w", err)
 	}
 	e.SecretKey = temp.SecretKey
+	e.Field = temp.Field
 	e.SecretPath = secretPath
 	e.ParamKey = temp.ParamKey
 	e.ParamPath = paramPath
@@ -406,6 +409,9 @@ func processValueInterpolations(config *SecretsConfig) error {
 			if envItem.SecretKey != "" && strings.Contains(envItem.SecretKey, "${") {
 				envItem.SecretKey = InterpolateEnvVars(envItem.SecretKey, resolvedVars)
 			}
+			if envItem.Field != "" && strings.Contains(envItem.Field, "${") {
+				envItem.Field = InterpolateEnvVars(envItem.Field, resolvedVars)
+			}
 			// secret-path
 			if len(envItem.SecretPath) > 0 {
 				envItem.SecretPath = interpolatePaths(envItem.SecretPath, resolvedVars)
@@ -664,6 +670,16 @@ func validateConfig(config *SecretsConfig) error {
 			// param-key / param-path are AWS Parameter Store only
 			if (envItem.ParamKey != "" || len(envItem.ParamPath) > 0) && effectiveProvider != "aws" {
 				return fmt.Errorf("environment '%s': env item %d: param-key and param-path are only supported with provider 'aws'", envName, idx)
+			}
+
+			// field selects one key inside an OpenBao secret
+			if envItem.Field != "" {
+				if effectiveProvider != "openbao" {
+					return fmt.Errorf("environment '%s': env item %d: field is only supported with provider 'openbao'", envName, idx)
+				}
+				if envItem.SecretKey == "" {
+					return fmt.Errorf("environment '%s': env item %d: field requires secret-key", envName, idx)
+				}
 			}
 
 			// Local provider rules: only value is allowed

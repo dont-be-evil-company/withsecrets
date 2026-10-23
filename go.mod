@@ -1,4 +1,4 @@
-module github.com/mistweaverco/withsecrets
+module github.com/dont-be-evil-company/withsecrets
 
 go 1.25.8
 

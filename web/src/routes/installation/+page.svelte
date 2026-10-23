@@ -107,7 +107,7 @@
 sudo pacman -S --needed base-devel git
 
 # Build from the PKGBUILD in the repo
-git clone https://github.com/mistweaverco/withsecrets.git
+git clone https://github.com/dont-be-evil-company/withsecrets.git
 cd withsecrets/scripts
 
 # Build & install the package
@@ -117,7 +117,7 @@ makepkg -si`}
 								<i class="fa-solid fa-info-circle mr-2"></i>
 								<span>
 									The package name is <code>withsecrets-bin</code> and installs the binary as
-									<code>ws</code> (with a <code>kuba</code> compatibility symlink). If you maintain a custom repo / AUR workflow, you can adapt the
+									<code>ws</code>. If you maintain a custom repo / AUR workflow, you can adapt the
 									PKGBUILD.
 								</span>
 							</div>
@@ -142,7 +142,7 @@ makepkg -si`}
 							</p>
 							<p>
 								Or visit our <a
-									href="https://github.com/mistweaverco/withsecrets/releases/latest"
+									href="https://github.com/dont-be-evil-company/withsecrets/releases/latest"
 									class="link link-primary">GitHub releases</a
 								> page.
 							</p>
@@ -232,7 +232,7 @@ makepkg -si`}
 				<i class="fa-solid fa-info-circle mr-2"></i>
 				<span>
 					<strong>Need help?</strong> Check out our
-					<a href="https://github.com/mistweaverco/withsecrets/issues" class="link">GitHub issues</a>
+					<a href="https://github.com/dont-be-evil-company/withsecrets/issues" class="link">GitHub issues</a>
 					or join our <a href="https://mistweaverco.com/discord" class="link">Discord community</a>.
 				</span>
 			</div>

@@ -547,9 +547,24 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
       secret-key: "secret/api-key"`}
 							/>
 							<p class="mt-4 text-sm">
-								<strong>Note:</strong> OpenBao secrets are stored as key-value pairs. If a secret contains
-								multiple keys, withsecrets will return the first string value it finds.
+								<code>project</code> is the mount or path prefix. For a KV v2 mount, withsecrets inserts
+								<code>/data/</code> after the mount, then unwraps <code>data.data</code>. Use
+								<code>field</code> to select one key, the same as <code>bao kv get -field</code>.
+								<code>field</code> is only valid for the openbao provider, together with
+								<code>secret-key</code>. Without <code>field</code>, a multi-key secret returns the
+								first string value. A path that already includes <code>/data/</code> is left unchanged.
 							</p>
+							<CodeBlock
+								lang="yaml"
+								meta="path=ws.yaml"
+								code={`default:
+  provider: openbao
+  project: secretv2
+  env:
+    FOOBAR:
+      secret-key: "withsecrets/foo/bar"
+      field: "password"`}
+							/>
 						</div>
 					</div>
 				</div>
