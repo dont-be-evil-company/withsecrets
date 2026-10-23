@@ -19,8 +19,8 @@
 				>Configuration Guide</ClickableHeadline
 			>
 			<p class="text-xl text-base-content/70">
-				Learn how to configure withsecrets with the <code>ws.yaml</code> file and understand advanced features
-				like variable interpolation and secret paths.
+				Learn how to configure withsecrets with the <code>ws.yaml</code> file and understand advanced
+				features like variable interpolation and secret paths.
 			</p>
 		</div>
 
@@ -38,8 +38,7 @@
 						</p>
 						<CodeBlock lang="bash" code={`ws init`} />
 						<p class="mt-4">
-							This will generate a default <code>ws.yaml</code> file that you can customize for your
-							needs.
+							This will generate a default <code>ws.yaml</code> file that you can customize for your needs.
 						</p>
 						<div class="alert alert-info mt-6">
 							<i class="fa-solid fa-info-circle mr-2"></i>
@@ -57,7 +56,9 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<ClickableHeadline level={3} id="import-from-dotenv" className="card-title" >Import from dotenv (.env*)</ClickableHeadline>
+						<ClickableHeadline level={3} id="import-from-dotenv" className="card-title"
+							>Import from dotenv (.env*)</ClickableHeadline
+						>
 						<p class="mb-4">
 							You can also create a configuration file by importing existing environment variables
 							from a <code>.env</code> file using the following command:
@@ -73,7 +74,11 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<ClickableHeadline level={3} id="import-from-knative-service-ksvc" className="card-title" >Import from Knative Services (ksvc)</ClickableHeadline>
+						<ClickableHeadline
+							level={3}
+							id="import-from-knative-service-ksvc"
+							className="card-title">Import from Knative Services (ksvc)</ClickableHeadline
+						>
 						<p class="mb-4">
 							If you're running on Cloud Run / Knative, you can generate a <code>ws.yaml</code>
 							from an existing Knative Service manifest. withsecrets will read the container
@@ -84,57 +89,73 @@
 							lang="bash"
 							code={`ws convert --from ksvc --infile service.yaml --env production`}
 						/>
-						<ClickableHeadline level={4} id="import-from-knative-service-ksvc-from-deployed-service" className="card-title mt-4" >Import from already deployed service</ClickableHeadline>
+						<ClickableHeadline
+							level={4}
+							id="import-from-knative-service-ksvc-from-deployed-service"
+							className="card-title mt-4">Import from already deployed service</ClickableHeadline
+						>
 						<p class="mt-4">
 							You can also import a deployed service directly from your cloud provider (no
 							<code>--infile</code> required). This is useful when you want to bootstrap a
 							<code>ws.yaml</code> from an existing service definition.
 						</p>
-							<div class="card bg-base-300">
-								<div class="card-body">
-									<ClickableHeadline level={4} id="import-from-deployed-gcp-cloud-run-knative-service-ksvc" className="card-title" >GCP (Cloud Run)</ClickableHeadline>
-									<CodeBlock
-										lang="bash"
-										code={`ws convert --from ksvc \
+						<div class="card bg-base-300">
+							<div class="card-body">
+								<ClickableHeadline
+									level={4}
+									id="import-from-deployed-gcp-cloud-run-knative-service-ksvc"
+									className="card-title">GCP (Cloud Run)</ClickableHeadline
+								>
+								<CodeBlock
+									lang="bash"
+									code={`ws convert --from ksvc \
   --provider gcp \
   --project 1337 \
   --name my-service \
   --env production`}
-									/>
-								</div>
+								/>
 							</div>
-							<div class="card bg-base-300">
-								<div class="card-body">
-									<ClickableHeadline level={4} id="import-from-deployed-aws-app-runner-knative-service-ksvc" className="card-title" >AWS (App Runner)</ClickableHeadline>
-									<p class="text-sm mb-2">
-										For AWS, <code>--name</code> expects <code>service.region</code>.
-									</p>
-									<CodeBlock
-										lang="bash"
-										code={`ws convert --from ksvc \
+						</div>
+						<div class="card bg-base-300">
+							<div class="card-body">
+								<ClickableHeadline
+									level={4}
+									id="import-from-deployed-aws-app-runner-knative-service-ksvc"
+									className="card-title">AWS (App Runner)</ClickableHeadline
+								>
+								<p class="text-sm mb-2">
+									For AWS, <code>--name</code> expects <code>service.region</code>.
+								</p>
+								<CodeBlock
+									lang="bash"
+									code={`ws convert --from ksvc \
   --provider aws \
   --project 123456789012 \
   --name my-service.us-east-1 \
   --env production`}
-									/>
-								</div>
+								/>
 							</div>
-							<div class="card bg-base-300">
-								<div class="card-body">
-									<ClickableHeadline level={4} id="import-from-deployed-azure-container-apps-knative-service-ksvc" className="card-title" >Azure (Container Apps)</ClickableHeadline>
-									<p class="text-sm mb-2">
-										For Azure, <code>--name</code> expects <code>app.resource-group</code>.
-									</p>
-									<CodeBlock
-										lang="bash"
-										code={`ws convert --from ksvc \
+						</div>
+						<div class="card bg-base-300">
+							<div class="card-body">
+								<ClickableHeadline
+									level={4}
+									id="import-from-deployed-azure-container-apps-knative-service-ksvc"
+									className="card-title">Azure (Container Apps)</ClickableHeadline
+								>
+								<p class="text-sm mb-2">
+									For Azure, <code>--name</code> expects <code>app.resource-group</code>.
+								</p>
+								<CodeBlock
+									lang="bash"
+									code={`ws convert --from ksvc \
   --provider azure \
   --project 00000000-0000-0000-0000-000000000000 \
   --name my-app.my-resource-group \
   --env production`}
-									/>
-								</div>
+								/>
 							</div>
+						</div>
 						<p class="mt-4">
 							For Knative Services running on GCP, the environment will default to provider
 							<code>gcp</code> and use the Service's <code>metadata.namespace</code> as the
@@ -249,7 +270,11 @@ production:
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-individual-secrets" className="card-title" >Individual Secrets (secret-key)</ClickableHeadline>
+							<ClickableHeadline
+								level={3}
+								id="withsecrets-yaml-env-individual-secrets"
+								className="card-title">Individual Secrets (secret-key)</ClickableHeadline
+							>
 							<p class="mb-4">Fetch a single secret from your cloud provider:</p>
 							<CodeBlock
 								lang="yaml"
@@ -265,7 +290,11 @@ production:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-secret-paths" className="card-title" >Secret Paths (secret-path)</ClickableHeadline>
+							<ClickableHeadline
+								level={3}
+								id="withsecrets-yaml-env-secret-paths"
+								className="card-title">Secret Paths (secret-path)</ClickableHeadline
+							>
 							<p class="mb-4">
 								Fetch all secrets under a path prefix. <code>secret-path</code> (and
 								<code>param-path</code>) can be a string or an ordered list of strings; later paths
@@ -284,18 +313,23 @@ production:
 							/>
 							<p class="mt-4 text-sm">
 								This will create environment variables like <code>DB_CONNECTION_STRING</code>,
-								<code>DB_USERNAME</code>, <code>API_STRIPE_KEY</code>, etc. (prefix + relative name after the path).
+								<code>DB_USERNAME</code>, <code>API_STRIPE_KEY</code>, etc. (prefix + relative name
+								after the path).
 							</p>
 						</div>
 					</div>
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-star-bulk" className="card-title" >Bulk inject with "*"</ClickableHeadline>
+							<ClickableHeadline
+								level={3}
+								id="withsecrets-yaml-env-star-bulk"
+								className="card-title">Bulk inject with "*"</ClickableHeadline
+							>
 							<p class="mb-4">
 								Use the literal env key <code>"*"</code> with <code>secret-path</code> or
-								<code>param-path</code> to inject each entry under the path as its own environment
-								variable (no prefix - just the sanitized path suffix):
+								<code>param-path</code> to inject each entry under the path as its own environment variable
+								(no prefix - just the sanitized path suffix):
 							</p>
 							<CodeBlock
 								lang="yaml"
@@ -315,7 +349,12 @@ production:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-param-store" className="card-title" >AWS Parameter Store (param-key / param-path)</ClickableHeadline>
+							<ClickableHeadline
+								level={3}
+								id="withsecrets-yaml-env-param-store"
+								className="card-title"
+								>AWS Parameter Store (param-key / param-path)</ClickableHeadline
+							>
 							<p class="mb-4">
 								When <code>provider</code> is <code>aws</code>, you can load from Systems Manager
 								Parameter Store instead of Secrets Manager:
@@ -333,15 +372,19 @@ production:
 							/>
 							<p class="mt-4 text-sm">
 								Exactly one of <code>secret-key</code>, <code>secret-path</code>,
-								<code>param-key</code>, <code>param-path</code>, or <code>value</code> is allowed per
-								env item. <code>param-*</code> is AWS-only.
+								<code>param-key</code>, <code>param-path</code>, or <code>value</code> is allowed
+								per env item. <code>param-*</code> is AWS-only.
 							</p>
 						</div>
 					</div>
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-hard-coded-values" className="card-title" >Hard-coded Values (value)</ClickableHeadline>
+							<ClickableHeadline
+								level={3}
+								id="withsecrets-yaml-env-hard-coded-values"
+								className="card-title">Hard-coded Values (value)</ClickableHeadline
+							>
 							<p class="mb-4">Set static environment variables:</p>
 							<CodeBlock
 								lang="yaml"
@@ -366,7 +409,11 @@ production:
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<ClickableHeadline level={3} id="withsecrets-yaml-env-basic-interpolation" className="card-title" >Basic Interpolation</ClickableHeadline>
+						<ClickableHeadline
+							level={3}
+							id="withsecrets-yaml-env-basic-interpolation"
+							className="card-title">Basic Interpolation</ClickableHeadline
+						>
 						<p class="mb-4">
 							withsecrets supports environment variable interpolation using <code
 								>$&lbrace;VAR_NAME&rbrace;</code
@@ -386,31 +433,39 @@ production:
 					</div>
 				</div>
 
-					<div class="card bg-base-200">
-						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-system-environment-variables" className="card-title" >System Environment Variables</ClickableHeadline>
-							<p>Reference system environment variables:</p>
-							<CodeBlock
-								lang="yaml"
-								meta="path=ws.yaml"
-								code={`API_URL:
+				<div class="card bg-base-200">
+					<div class="card-body">
+						<ClickableHeadline
+							level={3}
+							id="withsecrets-yaml-env-system-environment-variables"
+							className="card-title">System Environment Variables</ClickableHeadline
+						>
+						<p>Reference system environment variables:</p>
+						<CodeBlock
+							lang="yaml"
+							meta="path=ws.yaml"
+							code={`API_URL:
   value: "https://api.\${DOMAIN}/v1"`}
-							/>
-						</div>
+						/>
 					</div>
+				</div>
 
-					<div class="card bg-base-200">
-						<div class="card-body">
-							<ClickableHeadline level={3} id="withsecrets-yaml-env-environment-variables-default-values" className="card-title" >Default Values</ClickableHeadline>
-							<p>Provide fallback values with <code>$&lbrace;VAR:-default&rbrace;</code> syntax:</p>
-							<CodeBlock
-								lang="yaml"
-								meta="path=ws.yaml"
-								code={`REDIS_URL:
+				<div class="card bg-base-200">
+					<div class="card-body">
+						<ClickableHeadline
+							level={3}
+							id="withsecrets-yaml-env-environment-variables-default-values"
+							className="card-title">Default Values</ClickableHeadline
+						>
+						<p>Provide fallback values with <code>$&lbrace;VAR:-default&rbrace;</code> syntax:</p>
+						<CodeBlock
+							lang="yaml"
+							meta="path=ws.yaml"
+							code={`REDIS_URL:
   value: "redis://\${REDIS_HOST:-localhost}:\${REDIS_PORT:-6379}/0"`}
-							/>
-						</div>
+						/>
 					</div>
+				</div>
 
 				<div class="alert alert-info mt-6">
 					<i class="fa-solid fa-info-circle mr-2"></i>
@@ -533,10 +588,14 @@ production:
 			</section>
 
 			<div class="text-center mb-12">
-				<ClickableHeadline level={1} id="withsecrets-global-config" className="text-4xl font-bold mb-4"
-					>Configure withsecrets itself</ClickableHeadline
+				<ClickableHeadline
+					level={1}
+					id="withsecrets-global-config"
+					className="text-4xl font-bold mb-4">Configure withsecrets itself</ClickableHeadline
 				>
-				<p class="text-xl text-base-content/70">Learn how to configure withsecrets itself (globally).</p>
+				<p class="text-xl text-base-content/70">
+					Learn how to configure withsecrets itself (globally).
+				</p>
 			</div>
 			<section>
 				<ClickableHeadline
@@ -547,9 +606,10 @@ production:
 				<div class="card bg-base-200">
 					<div class="card-body">
 						<p class="mb-4">
-							You can configure the default template that withsecrets uses when you run <code>ws init</code>
-							without a template name.
-							To set the default template, run the following command:
+							You can configure the default template that withsecrets uses when you run <code
+								>ws init</code
+							>
+							without a template name. To set the default template, run the following command:
 						</p>
 						<CodeBlock
 							lang="bash"
@@ -557,9 +617,9 @@ production:
 `}
 						/>
 						<p class="mb-4">
-						You can also create templates with different names and
-						specify the template to use when running
-						<code>ws init my-template-name</code>:
+							You can also create templates with different names and specify the template to use
+							when running
+							<code>ws init my-template-name</code>:
 						</p>
 						<CodeBlock
 							lang="bash"
@@ -567,9 +627,9 @@ production:
 `}
 						/>
 						<p class="mb-4">
-						You can also create templates with different names and
-						specify the template to use when running
-						<code>ws init my-template-name</code>:
+							You can also create templates with different names and specify the template to use
+							when running
+							<code>ws init my-template-name</code>:
 						</p>
 					</div>
 				</div>
@@ -582,7 +642,8 @@ production:
 				<div class="card bg-base-200">
 					<div class="card-body">
 						<p class="mb-4">
-							There are no defaults set by default. To set defaults for a provider, run the following command:
+							There are no defaults set by default. To set defaults for a provider, run the
+							following command:
 						</p>
 						<CodeBlock
 							lang="bash"
@@ -590,12 +651,15 @@ production:
 `}
 						/>
 						<p class="mb-4">
-							This will set the default provider to GCP and the default region to <code>europe-west3</code>.
-							So, when you're using <code>ws tui</code> and add a secret, it will default to using <code>europe-west3</code>
+							This will set the default provider to GCP and the default region to <code
+								>europe-west3</code
+							>. So, when you're using <code>ws tui</code> and add a secret, it will default to
+							using <code>europe-west3</code>
 							as the region for GCP secrets.
 						</p>
 						<p class="mb-4">
-							Check <code>ws config defaults get --help</code> for more options related to managing the defaults.
+							Check <code>ws config defaults get --help</code> for more options related to managing the
+							defaults.
 						</p>
 					</div>
 				</div>

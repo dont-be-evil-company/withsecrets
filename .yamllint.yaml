@@ -1,0 +1,14 @@
+---
+extends: default
+rules:
+  truthy:
+    check-keys: false
+  line-length:
+    max: 120
+ignore:
+  - pnpm-lock.yaml
+  - pnpm-workspace.yaml
+  - node_modules
+  - .git
+  - .jj
+  - .pnpm-store

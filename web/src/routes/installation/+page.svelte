@@ -210,7 +210,9 @@ makepkg -si`}
 				<div class="card bg-base-200">
 					<div class="card-body">
 						<h3 class="card-title">Configure withsecrets</h3>
-						<p>Set up your configuration file to start using withsecrets with your cloud providers.</p>
+						<p>
+							Set up your configuration file to start using withsecrets with your cloud providers.
+						</p>
 						<a href="/configuration" class="btn btn-outline bg-lg">Configuration Guide</a>
 					</div>
 				</div>
@@ -219,7 +221,8 @@ makepkg -si`}
 					<div class="card-body">
 						<h3 class="card-title">Learn Usage</h3>
 						<p>
-							Discover how to use withsecrets to run your applications with secure environment variables.
+							Discover how to use withsecrets to run your applications with secure environment
+							variables.
 						</p>
 						<a href="/usage" class="btn btn-outline bg-lg">Usage Guide</a>
 					</div>
@@ -232,7 +235,9 @@ makepkg -si`}
 				<i class="fa-solid fa-info-circle mr-2"></i>
 				<span>
 					<strong>Need help?</strong> Check out our
-					<a href="https://github.com/dont-be-evil-company/withsecrets/issues" class="link">GitHub issues</a>
+					<a href="https://github.com/dont-be-evil-company/withsecrets/issues" class="link"
+						>GitHub issues</a
+					>
 					or join our <a href="https://mistweaverco.com/discord" class="link">Discord community</a>.
 				</span>
 			</div>

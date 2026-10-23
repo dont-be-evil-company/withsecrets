@@ -19,8 +19,8 @@
 				>Usage Guide</ClickableHeadline
 			>
 			<p class="text-xl text-base-content/70">
-				Learn how to use withsecrets to securely run your applications with environment variables from
-				cloud providers.
+				Learn how to use withsecrets to securely run your applications with environment variables
+				from cloud providers.
 			</p>
 		</div>
 
@@ -32,30 +32,33 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<ClickableHeadline level={3} id="running-applications-with-withsecrets" className="card-title"
-							>Running Applications with withsecrets</ClickableHeadline
+						<ClickableHeadline
+							level={3}
+							id="running-applications-with-withsecrets"
+							className="card-title">Running Applications with withsecrets</ClickableHeadline
 						>
 						<p class="mb-4">The basic syntax for using withsecrets is:</p>
 						<CodeBlock lang="bash" code={`ws run -- <your-application>`} />
 						<p class="mt-4">
-							This will fetch all secrets defined in your <code>ws.yaml</code> file and pass them as
-							environment variables to your application. By default, these secrets are merged with your
-							current OS environment.
+							This will fetch all secrets defined in your <code>ws.yaml</code> file and pass them as environment
+							variables to your application. By default, these secrets are merged with your current OS
+							environment.
 						</p>
 					</div>
 				</div>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<ClickableHeadline level={3} id="running-commands-with-withsecrets" className="card-title"
-							>Running Commands with withsecrets</ClickableHeadline
+						<ClickableHeadline
+							level={3}
+							id="running-commands-with-withsecrets"
+							className="card-title">Running Commands with withsecrets</ClickableHeadline
 						>
 						<p class="mb-4">The basic syntax for running a one-of command with withsecrets is:</p>
 						<CodeBlock lang="bash" code={`ws run --command "echo \$SOME_SECRET"`} />
 						<p class="mt-4">
-							This will fetch all secrets defined in your <code>ws.yaml</code> file and pass them as
-							environment variables to your command. By default, these secrets are merged with your current
-							OS environment.
+							This will fetch all secrets defined in your <code>ws.yaml</code> file and pass them as environment
+							variables to your command. By default, these secrets are merged with your current OS environment.
 						</p>
 						<div class="alert alert-warning mt-6">
 							<i class="fa-solid fa-triangle-exclamation mr-2"></i>
@@ -85,9 +88,8 @@
 						>
 						<p class="mb-4">
 							The <code>--contain</code> flag prevents the merging of the current OS environment
-							with the environment variables from <code>ws.yaml</code>. This is useful when you
-							want to ensure only the secrets defined in your configuration are available to the
-							command.
+							with the environment variables from <code>ws.yaml</code>. This is useful when you want
+							to ensure only the secrets defined in your configuration are available to the command.
 						</p>
 						<CodeBlock
 							lang="bash"
@@ -140,8 +142,8 @@ ws run --contain -- node dist/server.js`}
 					<div class="card-body">
 						<h3 class="card-title">Validate Access and Mappings</h3>
 						<p class="mb-4">
-							Use the <code>test</code> subcommand to verify that withsecrets can load your configuration and
-							retrieve all mapped values for an environment without executing a program.
+							Use the <code>test</code> subcommand to verify that withsecrets can load your configuration
+							and retrieve all mapped values for an environment without executing a program.
 						</p>
 						<CodeBlock
 							lang="bash"
@@ -188,8 +190,8 @@ ws test --config ./config/ws.yaml --env production`}
 				<div class="alert alert-info">
 					<i class="fa-solid fa-info-circle mr-2"></i>
 					<span>
-						If no environment is specified, withsecrets will use the <code>default</code> environment from your
-						configuration.
+						If no environment is specified, withsecrets will use the <code>default</code> environment
+						from your configuration.
 					</span>
 				</div>
 			</section>
@@ -311,8 +313,8 @@ docker run --env-file=<(ws show --output dotenv) myapp`}
 							</p>
 							<CodeBlock lang="bash" code={`ws update`} />
 							<p class="mt-4">
-								This command checks for the latest version of withsecrets and replaces the current binary
-								with the updated one. It also creates a backup of the existing binary.
+								This command checks for the latest version of withsecrets and replaces the current
+								binary with the updated one. It also creates a backup of the existing binary.
 							</p>
 						</div>
 					</div>
@@ -328,7 +330,8 @@ docker run --env-file=<(ws show --output dotenv) myapp`}
 						<div class="card-body">
 							<h3 class="card-title">Interactive TUI for environments and secrets</h3>
 							<p class="mb-4">
-								withsecrets includes an interactive terminal UI for viewing, editing, and adding secrets.
+								withsecrets includes an interactive terminal UI for viewing, editing, and adding
+								secrets.
 							</p>
 							<CodeBlock
 								lang="bash"
@@ -397,8 +400,8 @@ ws gui --no-browser`}
 						<div class="card-body">
 							<h3 class="card-title">Show the baked-in changelog</h3>
 							<p class="mb-4">
-								You can view withsecrets’s changelog directly in your terminal (rendered as formatted
-								markdown):
+								You can view withsecrets’s changelog directly in your terminal (rendered as
+								formatted markdown):
 							</p>
 							<CodeBlock
 								lang="bash"
@@ -477,8 +480,8 @@ ws changelog 1.8.0`}
 										>Configuration Errors</ClickableHeadline
 									>
 									<p class="text-sm">
-										Validate your <code>ws.yaml</code> file. Use <code>ws init</code> to generate
-										a valid template.
+										Validate your <code>ws.yaml</code> file. Use <code>ws init</code> to generate a valid
+										template.
 									</p>
 								</div>
 								<div>

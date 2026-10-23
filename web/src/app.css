@@ -1,10 +1,10 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin 'daisyui' {
 	themes: night --default;
 }
 
 div p code {
-	font-family: "Courier New", Courier, monospace;
+	font-family: 'Courier New', Courier, monospace;
 	font-size: 1.2rem;
 	line-height: 2.5rem;
 	overflow-x: auto;

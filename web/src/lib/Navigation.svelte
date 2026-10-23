@@ -77,9 +77,7 @@
 		</div>
 		<a href="/" class="btn btn-ghost text-xl">
 			<img src="/logo.svg" alt="withsecrets" class="w-8 h-8 mr-2" />
-			<span class="hidden sm:inline">
-			withsecrets
-			</span>
+			<span class="hidden sm:inline"> withsecrets </span>
 		</a>
 	</div>
 	<div class="navbar-center hidden lg:flex">
@@ -133,8 +131,7 @@
 						if (
 							activeEl &&
 							(activeEl.id === 'doc-search-results' ||
-							activeEl.closest('#doc-search-results')?.contains(activeEl)
-							)
+								activeEl.closest('#doc-search-results')?.contains(activeEl))
 						) {
 							return;
 						}

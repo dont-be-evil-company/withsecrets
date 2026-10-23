@@ -19,8 +19,8 @@
 				>Examples &amp; Use Cases</ClickableHeadline
 			>
 			<p class="text-xl text-base-content/70">
-				See practical examples of how to use withsecrets with different applications, frameworks, and
-				deployment scenarios.
+				See practical examples of how to use withsecrets with different applications, frameworks,
+				and deployment scenarios.
 			</p>
 		</div>
 
@@ -340,7 +340,9 @@ CMD ["npm", "start"]`}
 							<ClickableHeadline level={3} id="docker-compose-integration" className="card-title"
 								>Docker Compose Integration</ClickableHeadline
 							>
-							<p class="mb-4">Use withsecrets with Docker Compose for multi-service applications:</p>
+							<p class="mb-4">
+								Use withsecrets with Docker Compose for multi-service applications:
+							</p>
 							<CodeBlock
 								lang="bash"
 								code={`# Start all services with production secrets
@@ -654,10 +656,8 @@ development:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<ClickableHeadline
-								level={3}
-								id="aws-parameter-store-bulk"
-								className="card-title">AWS Parameter Store bulk loading</ClickableHeadline
+							<ClickableHeadline level={3} id="aws-parameter-store-bulk" className="card-title"
+								>AWS Parameter Store bulk loading</ClickableHeadline
 							>
 							<p class="mb-4">
 								Load every parameter under a path as env vars with <code>"*"</code> and
@@ -678,8 +678,8 @@ development:
 								Parameters <code>/local/withsecrets/config/USERNAME</code> and
 								<code>/local/withsecrets/config/PASSWORD</code> map to <code>USERNAME</code> and
 								<code>PASSWORD</code>. Later paths overlay earlier ones on name collisions. The same
-								<code>"*"</code> pattern works with <code>secret-path</code> for Secrets Manager
-								(and other providers).
+								<code>"*"</code> pattern works with <code>secret-path</code> for Secrets Manager (and
+								other providers).
 							</p>
 						</div>
 					</div>

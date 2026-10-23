@@ -1,19 +1,19 @@
-import { mdsvexShiki } from "@mistweaverco/mdsvex-shiki";
+import { mdsvexShiki } from '@mistweaverco/mdsvex-shiki';
 
 const highlighterOptions = {
 	displayLanguage: true,
 	displayPath: true,
 	shikiOptions: {
 		langs: /** @type {const} */ ([
-			"bash",
-			"yaml",
-			"json",
-			"javascript",
-			"python",
-			"powershell",
-			"docker",
-		]),
-	},
+			'bash',
+			'yaml',
+			'json',
+			'javascript',
+			'python',
+			'powershell',
+			'docker'
+		])
+	}
 };
 
 /** @type {Awaited<ReturnType<Awaited<ReturnType<typeof mdsvexShiki>>>> | undefined} */
@@ -28,7 +28,7 @@ async function getHighlight() {
 }
 
 function unescapeCodeTemplateSource(raw) {
-	return raw.replace(/\\`/g, "`").replace(/\\\$\{/g, "${");
+	return raw.replace(/\\`/g, '`').replace(/\\\$\{/g, '${');
 }
 
 const blockRe = /<CodeBlock[\s\S]*?lang="([^"]+)"([\s\S]*?)code=\{`([\s\S]*?)`\}\s*\/>/g;
@@ -41,11 +41,11 @@ const blockRe = /<CodeBlock[\s\S]*?lang="([^"]+)"([\s\S]*?)code=\{`([\s\S]*?)`\}
  */
 export function inlineShikiCodeblocks() {
 	return {
-		name: "inline-shiki-codeblocks",
+		name: 'inline-shiki-codeblocks',
 		// enforce: "pre",
 		async transform(code, id) {
-			if (!id.includes("/routes/") || !id.endsWith(".svelte")) return null;
-			if (!code.includes("<CodeBlock")) return null;
+			if (!id.includes('/routes/') || !id.endsWith('.svelte')) return null;
+			if (!code.includes('<CodeBlock')) return null;
 
 			const h = await getHighlight();
 			const matches = [...code.matchAll(blockRe)];
@@ -58,12 +58,12 @@ export function inlineShikiCodeblocks() {
 				const meta = metaMatch ? metaMatch[1] : undefined;
 				const source = unescapeCodeTemplateSource(raw);
 				const html = await h(source, lang, meta);
-				const htmlExpr = "{@html " + JSON.stringify(html) + "}";
+				const htmlExpr = '{@html ' + JSON.stringify(html) + '}';
 				const replacement = `<div class="mb-0">${htmlExpr}</div>`;
 				replacements.push({
 					index: match.index,
 					len: full.length,
-					replacement,
+					replacement
 				});
 			}
 
@@ -73,10 +73,10 @@ export function inlineShikiCodeblocks() {
 				out = out.slice(0, index) + replacement + out.slice(index + len);
 			}
 
-			out = out.replace(/^\s*import CodeBlock from '\$lib\/CodeBlock\.svelte';\n?/m, "");
-			out = out.replace(/^\s*import CodeBlock from "\$lib\/CodeBlock\.svelte";\n?/m, "");
+			out = out.replace(/^\s*import CodeBlock from '\$lib\/CodeBlock\.svelte';\n?/m, '');
+			out = out.replace(/^\s*import CodeBlock from "\$lib\/CodeBlock\.svelte";\n?/m, '');
 
 			return { code: out, map: null };
-		},
+		}
 	};
 }

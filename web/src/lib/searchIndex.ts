@@ -1,4 +1,4 @@
-import { GENERATED_SEARCH_INDEX } from "./searchIndex.generated";
+import { GENERATED_SEARCH_INDEX } from './searchIndex.generated';
 
 export type SearchEntry = {
 	title: string;
@@ -12,25 +12,25 @@ export type SearchEntry = {
 };
 
 /** Optional synonyms merged onto generated entries by href. */
-export const SEARCH_EXTRAS: Record<string, Pick<SearchEntry, "keywords"> & { excerpt?: string }> = {
-	"/installation": {
+export const SEARCH_EXTRAS: Record<string, Pick<SearchEntry, 'keywords'> & { excerpt?: string }> = {
+	'/installation': {
 		keywords: [
-			"aur",
-			"paru",
-			"yay",
-			"withsecrets-bin",
-			"pkgbuild",
-			"pacman",
-			"makepkg",
-			"powershell",
-		],
+			'aur',
+			'paru',
+			'yay',
+			'withsecrets-bin',
+			'pkgbuild',
+			'pacman',
+			'makepkg',
+			'powershell'
+		]
 	},
-	"/usage": {
-		keywords: ["contain", "ci", "cd"],
+	'/usage': {
+		keywords: ['contain', 'ci', 'cd']
 	},
-	"/configuration": {
-		keywords: ["ws.yaml", "param-key", "param-path", "secret-key", "secret-path"],
-	},
+	'/configuration': {
+		keywords: ['ws.yaml', 'param-key', 'param-path', 'secret-key', 'secret-path']
+	}
 };
 
 function mergeKeywords(base: readonly string[], extra?: string[]) {
@@ -53,6 +53,6 @@ export const SEARCH_INDEX: SearchEntry[] = GENERATED_SEARCH_INDEX.map((entry) =>
 		href: entry.href,
 		keywords: mergeKeywords(entry.keywords, extra?.keywords),
 		excerpt: extra?.excerpt ?? entry.excerpt,
-		content: entry.content,
+		content: entry.content
 	};
 });

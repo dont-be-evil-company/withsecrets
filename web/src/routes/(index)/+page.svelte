@@ -20,7 +20,8 @@
 			<p class="py-6 text-xl">Securely and easily access your environment variables</p>
 			<p class="py-4">
 				withsecrets helps you get rid of <code>.env</code> files. Pass env directly from GCP Secret Manager,
-				AWS Secrets Manager, AWS Parameter Store, Azure Key Vault, OpenBao, Bitwarden Secrets Manager, and more to your application.
+				AWS Secrets Manager, AWS Parameter Store, Azure Key Vault, OpenBao, Bitwarden Secrets Manager,
+				and more to your application.
 			</p>
 			<div class="flex gap-4 justify-center mt-8">
 				<a href="/installation" class="btn btn-primary">Get Started</a>

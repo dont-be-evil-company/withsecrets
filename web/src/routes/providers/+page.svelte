@@ -19,7 +19,8 @@
 				>Providers Setup</ClickableHeadline
 			>
 			<p class="text-xl text-base-content/70">
-				Configure authentication and permissions for your providers to start using withsecrets securely.
+				Configure authentication and permissions for your providers to start using withsecrets
+				securely.
 			</p>
 		</div>
 
@@ -135,9 +136,9 @@ export BITWARDEN_ORGANIZATION_ID="your-organization-id"`}
 export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"`}
 							/>
 							<p class="mt-4 text-sm">
-								Optional: if you want the Bitwarden SDK to reuse its own state between withsecrets runs
-								(for example, to avoid re-initializing some internal session data), you can point it
-								at a state file. The SDK will create and maintain this file itself:
+								Optional: if you want the Bitwarden SDK to reuse its own state between withsecrets
+								runs (for example, to avoid re-initializing some internal session data), you can
+								point it at a state file. The SDK will create and maintain this file itself:
 							</p>
 							<CodeBlock
 								lang="bash"
@@ -145,9 +146,10 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"`}
 							/>
 							<p class="mt-2 text-sm">
 								Treat this file as sensitive: keep it outside version control and in a user-scoped
-								data directory (for example, <code>~/.local/share/withsecrets</code> on Linux/macOS or
-								<code>%LOCALAPPDATA%\withsecrets</code> on Windows). You still need a valid Bitwarden access
-								token; the state file complements it rather than replacing it.
+								data directory (for example, <code>~/.local/share/withsecrets</code> on Linux/macOS
+								or
+								<code>%LOCALAPPDATA%\withsecrets</code> on Windows). You still need a valid Bitwarden
+								access token; the state file complements it rather than replacing it.
 							</p>
 						</div>
 					</div>
@@ -323,7 +325,8 @@ export AWS_REGION="us-east-1"`}
 						<div class="card-body">
 							<h3 class="card-title">2. IAM Permissions</h3>
 							<p class="mb-4">
-								For <strong>Secrets Manager</strong>, grant <code>secretsmanager:GetSecretValue</code>
+								For <strong>Secrets Manager</strong>, grant
+								<code>secretsmanager:GetSecretValue</code>
 								(and <code>secretsmanager:ListSecrets</code> for <code>secret-path</code> bulk loading):
 							</p>
 							<CodeBlock
@@ -399,9 +402,9 @@ export AWS_REGION="us-east-1"`}
 						<div class="card-body">
 							<h3 class="card-title">4. Parameter Store (param-key / param-path)</h3>
 							<p class="mb-4">
-								Use <code>param-key</code> for a single parameter, or <code>param-path</code> to load
-								everything under a path. With env key <code>"*"</code>, each parameter name suffix is
-								injected as its own environment variable (no prefix):
+								Use <code>param-key</code> for a single parameter, or <code>param-path</code> to
+								load everything under a path. With env key <code>"*"</code>, each parameter name
+								suffix is injected as its own environment variable (no prefix):
 							</p>
 							<CodeBlock
 								lang="yaml"
@@ -547,7 +550,8 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
       secret-key: "secret/api-key"`}
 							/>
 							<p class="mt-4 text-sm">
-								<code>project</code> is the mount or path prefix. For a KV v2 mount, withsecrets inserts
+								<code>project</code> is the mount or path prefix. For a KV v2 mount, withsecrets
+								inserts
 								<code>/data/</code> after the mount, then unwraps <code>data.data</code>. Use
 								<code>field</code> to select one key, the same as <code>bao kv get -field</code>.
 								<code>field</code> is only valid for the openbao provider, together with
