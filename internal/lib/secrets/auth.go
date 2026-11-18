@@ -229,28 +229,20 @@ func TestOpenBaoAuthorization(ctx context.Context, projectID string) (*Authoriza
 		ProjectID: projectID,
 	}
 
-	// Step 1: Check for required OpenBao address
+	// OPENBAO_* overrides the client's BAO_* / VAULT_* values. An empty address leaves BAO_ADDR in place.
 	address := os.Getenv("OPENBAO_ADDR")
-	if address == "" {
-		result.Authenticated = false
-		result.ErrorMessage = "OPENBAO_ADDR environment variable is required for OpenBao"
-		result.CredentialsInfo = "Set OPENBAO_ADDR environment variable to your OpenBao server address."
-		return result, nil
-	}
-
-	// Step 2: Try to create OpenBao client (this will check connection and token)
 	token := os.Getenv("OPENBAO_TOKEN")
 	namespace := os.Getenv("OPENBAO_NAMESPACE")
 	client, err := NewOpenBaoManager(ctx, address, token, namespace)
 	if err != nil {
 		result.Authenticated = false
 		result.ErrorMessage = fmt.Sprintf("Failed to create OpenBao client: %v", err)
-		result.CredentialsInfo = "Failed to connect to OpenBao. Check OPENBAO_ADDR and OPENBAO_TOKEN."
+		result.CredentialsInfo = "Failed to connect to OpenBao. Check OPENBAO_ADDR or BAO_ADDR, and a token from OPENBAO_TOKEN, BAO_TOKEN, BAO_TOKEN_FILE, or ~/.bao-token."
 		return result, nil
 	}
 
 	result.Authenticated = true
-	result.CredentialsInfo = fmt.Sprintf("Connected to OpenBao at: %s", address)
+	result.CredentialsInfo = fmt.Sprintf("Connected to OpenBao at: %s", client.client.Address())
 
 	// Step 3: Try listing secrets to verify access
 	// Try listing at root or a common path

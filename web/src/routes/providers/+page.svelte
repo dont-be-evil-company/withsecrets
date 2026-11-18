@@ -516,12 +516,21 @@ export AZURE_CLIENT_SECRET="your-client-secret"`}
 								id="openbao-authentication-methods"
 								className="card-title">2. Authentication Methods</ClickableHeadline
 							>
-							<p class="mb-4">Set up authentication using environment variables:</p>
+							<p class="mb-4">
+								A normal <code>bao</code> login works without extra variables. Address uses
+								<code>OPENBAO_ADDR</code>, then <code>BAO_ADDR</code>, then <code>VAULT_ADDR</code>,
+								otherwise <code>https://127.0.0.1:8200</code>. Token uses <code>OPENBAO_TOKEN</code>,
+								then <code>BAO_TOKEN</code>, then <code>VAULT_TOKEN</code>, then the file in
+								<code>BAO_TOKEN_FILE</code>, then <code>$HOME/.bao-token</code>. Namespace uses
+								<code>OPENBAO_NAMESPACE</code>, then <code>BAO_NAMESPACE</code>, then
+								<code>VAULT_NAMESPACE</code>. TLS settings such as <code>BAO_CACERT</code> and
+								<code>BAO_SKIP_VERIFY</code> are kept.
+							</p>
 							<CodeBlock
 								lang="bash"
-								code={`export OPENBAO_ADDR="http://localhost:8200"  # Required: OpenBao server address
-export OPENBAO_TOKEN="your-openbao-token"    # Optional: Authentication token
-export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using enterprise features)`}
+								code={`export OPENBAO_ADDR="http://localhost:8200"  # Optional: overrides BAO_ADDR
+export OPENBAO_TOKEN="your-openbao-token"    # Optional: overrides BAO_TOKEN and token files
+export OPENBAO_NAMESPACE="your-namespace"    # Optional: overrides BAO_NAMESPACE`}
 							/>
 						</div>
 					</div>

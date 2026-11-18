@@ -82,13 +82,9 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 
 		return NewAzureKeyVaultManager(ctx, vaultURL, tenantID, clientID, clientSecret)
 	case "openbao":
-		// Check for OpenBao configuration
+		// OPENBAO_ADDR overrides BAO_ADDR / VAULT_ADDR. An empty address leaves the client default in place.
+		// OPENBAO_TOKEN overrides BAO_TOKEN / VAULT_TOKEN and the token file.
 		address := os.Getenv("OPENBAO_ADDR")
-		if address == "" {
-			return nil, fmt.Errorf("OPENBAO_ADDR environment variable is required for OpenBao")
-		}
-
-		// Optional: token and namespace
 		token := os.Getenv("OPENBAO_TOKEN")
 		namespace := os.Getenv("OPENBAO_NAMESPACE")
 

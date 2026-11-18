@@ -863,12 +863,31 @@ To use OpenBao:
 
 1. **Setup**: Make sure you have an OpenBao server running and accessible.
 
-2. **Authentication**: Set up authentication using environment variables:
+2. **Authentication**: A normal `bao` login works without extra variables. withsecrets reads the same address and token sources as the OpenBao client and helmfile vals.
+
+   Address, first match wins:
+
+   - `OPENBAO_ADDR`
+   - `BAO_ADDR`
+   - `VAULT_ADDR`
+   - otherwise `https://127.0.0.1:8200`
+
+   Token, first match wins:
+
+   - `OPENBAO_TOKEN`
+   - `BAO_TOKEN`
+   - `VAULT_TOKEN`
+   - the file in `BAO_TOKEN_FILE`
+   - `$HOME/.bao-token`
+
+   Namespace, first match wins: `OPENBAO_NAMESPACE`, then `BAO_NAMESPACE`, then `VAULT_NAMESPACE`.
+
+   TLS settings from the OpenBao client are kept, including `BAO_CACERT`, `BAO_CLIENT_CERT`, `BAO_CLIENT_KEY`, and `BAO_SKIP_VERIFY`.
 
    ```bash
-   export OPENBAO_ADDR="http://localhost:8200"  # Required: OpenBao server address
-   export OPENBAO_TOKEN="your-openbao-token"    # Optional: Authentication token
-   export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using enterprise features)
+   export OPENBAO_ADDR="http://localhost:8200"  # Optional: overrides BAO_ADDR
+   export OPENBAO_TOKEN="your-openbao-token"    # Optional: overrides BAO_TOKEN and token files
+   export OPENBAO_NAMESPACE="your-namespace"    # Optional: overrides BAO_NAMESPACE
    ```
 
 3. **Permissions**: Ensure your OpenBao token has read permissions for the secrets you want to access.
