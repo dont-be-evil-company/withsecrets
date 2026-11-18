@@ -54,7 +54,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6.3.0
         with:
-          go-version: 1.26
+          go-version: 1.27
       - name: Install C toolchain
         run: sudo apt-get update && sudo apt-get install -y build-essential
       - name: Cache Vite-Plus dependencies
