@@ -1,3 +1,27 @@
+## 2.7.0 (2026-11-18)
+
+* feat(openbao): add support for openbao cli token reads ([9aab84c](https://github.com/dont-be-evil-company/withsecrets/commit/9aab84c))
+* chore(lint): fix lint/fmt and remove .vale config ([d2fb7ef](https://github.com/dont-be-evil-company/withsecrets/commit/d2fb7ef))
+
+## 2.6.0 (2026-10-23)
+
+* feat(bao)!: kv v2 + move org ([0d6b95d](https://github.com/dont-be-evil-company/withsecrets/commit/0d6b95d))
+
+## 2.5.0 (2026-09-08)
+
+* fix(cache, web-search): search index gen + prevent stale cache on update ([8cb4f47](https://github.com/dont-be-evil-company/withsecrets/commit/8cb4f47))
+
+## <small>2.4.1 (2026-08-30)</small>
+
+* fix(cache): caching of paths didn't work properly ([fda1789](https://github.com/dont-be-evil-company/withsecrets/commit/fda1789))
+
+## 2.4.0 (2026-08-13)
+
+* fix(ci): fix path detection in web deploy ci ([90db9a1](https://github.com/dont-be-evil-company/withsecrets/commit/90db9a1))
+* fix(ci): update pnpm-lock.yaml ([4e27677](https://github.com/dont-be-evil-company/withsecrets/commit/4e27677))
+* feat(paths): add multi-path and CRUD for paths ([37c9ba5](https://github.com/dont-be-evil-company/withsecrets/commit/37c9ba5))
+* chore(docs): update CHANGELOG.md ([785f124](https://github.com/dont-be-evil-company/withsecrets/commit/785f124))
+
 ## 2.3.0 (2026-08-12)
 
 * feat(aws): add param-store support and fix bulk-loading ([525a3b5](https://github.com/dont-be-evil-company/withsecrets/commit/525a3b5))
