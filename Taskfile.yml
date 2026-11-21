@@ -1,13 +1,23 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
-
+---
 version: '3'
-
-vars:
-  GREETING: Hello, world!
 
 tasks:
   default:
-    desc: Print a greeting message
+    desc: List all tasks
     cmds:
-      - echo "{{.GREETING}}"
+      - task --list
     silent: true
+  build:
+    env:
+      VERSION: '{{dateInZone "20060102T150405Z" (now) "UTC"}}-local-dev'
+      GVPATH: github.com/dont-be-evil-company/withsecrets/internal/lib/version.VERSION
+    desc: Build the project
+    cmds:
+      - echo "Building the project..."
+      - go build -ldflags "-X '${GVPATH}=${VERSION}'" -o ./dist/ws-linux-amd64 ./main.go
+  install:
+    desc: Installs locally
+    cmds:
+      - echo "Installing the project locally..."
+      - cp ./dist/ws-linux-amd64 $HOME/.local/bin/ws

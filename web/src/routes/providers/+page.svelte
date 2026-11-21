@@ -86,6 +86,16 @@
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">🛠️</div>
+							<a class="hover:link" href="#terraform">
+								<h3 class="card-title justify-center">Terraform</h3>
+							</a>
+							<p class="text-sm">Cloud Run and Cloud Run function env from a Terraform file</p>
+						</div>
+					</div>
+
+					<div class="card bg-base-200 text-center">
+						<div class="card-body">
+							<div class="text-4xl mb-2">🛠️</div>
 							<a class="hover:link" href="#local">
 								<h3 class="card-title justify-center">Local</h3>
 							</a>
@@ -579,6 +589,46 @@ export OPENBAO_NAMESPACE="your-namespace"    # Optional: overrides BAO_NAMESPACE
       secret-key: "withsecrets/foo/bar"
       field: "password"`}
 							/>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="terraform" className="text-3xl font-bold mb-6"
+					>Terraform (terraform)</ClickableHeadline
+				>
+
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">Configuration</h3>
+							<p class="mb-4">
+								<code>path</code> is relative to the <code>ws.yaml</code> file. <code>project</code>
+								is optional, and <code>env</code> may be omitted when the Terraform file yields at
+								least one entry. <code>inherits</code> still applies parents first. Terraform
+								entries come next, and this environment's <code>env</code> replaces them.
+							</p>
+							<CodeBlock
+								lang="yaml"
+								meta="path=ws.yaml"
+								code={`default:
+  provider: terraform
+  path: ./iac/cloudrun.tf
+  env:
+    NODE_ENV:
+      value: development`}
+							/>
+							<p class="mt-4">
+								Literal strings and literal Secret Manager references are imported from
+								<code>google_cloud_run_v2_service</code> container env and from
+								<code>google_cloudfunctions2_function</code> <code>service_config</code>. Variables,
+								interpolations, and ternaries are skipped. Secret references are read from GCP
+								Secret Manager at <code>latest</code>. The project comes from the resource, then
+								<code>project</code>, then <code>GOOGLE_CLOUD_PROJECT</code>,
+								<code>GCLOUD_PROJECT</code>, or <code>CLOUDSDK_CORE_PROJECT</code>, then the active
+								gcloud config.
+							</p>
 						</div>
 					</div>
 				</div>

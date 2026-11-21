@@ -21,6 +21,7 @@ type Environment struct {
 	Provider string             `yaml:"provider"`
 	Project  string             `yaml:"project"`
 	Region   string             `yaml:"region,omitempty"`
+	Path     string             `yaml:"path,omitempty"`
 	Env      map[string]EnvItem `yaml:"env"`
 	Inherits []string           `yaml:"inherits,omitempty"`
 	Cache    *cache.CacheConfig `yaml:"cache,omitempty"`
@@ -33,6 +34,7 @@ func (e *Environment) UnmarshalYAML(value *yaml.Node) error {
 		Provider string             `yaml:"provider"`
 		Project  string             `yaml:"project"`
 		Region   string             `yaml:"region,omitempty"`
+		Path     string             `yaml:"path,omitempty"`
 		Env      map[string]EnvItem `yaml:"env"`
 		Inherits interface{}        `yaml:"inherits,omitempty"`
 		Cache    interface{}        `yaml:"cache,omitempty"`
@@ -44,6 +46,7 @@ func (e *Environment) UnmarshalYAML(value *yaml.Node) error {
 	e.Provider = tmp.Provider
 	e.Project = tmp.Project
 	e.Region = tmp.Region
+	e.Path = tmp.Path
 	e.Env = tmp.Env
 
 	// Normalize inherits to []string
@@ -539,6 +542,14 @@ func LoadSecretsConfig(configPath string) (*SecretsConfig, error) {
 
 	logger.Debug("YAML parsed successfully", "environments_count", len(config.Environments))
 
+	// Turn Terraform files into env items before inheritance, so explicit env wins
+	// and inherited environments already include their Terraform values.
+	logger.Debug("Expanding terraform environments")
+	if err := expandTerraformEnvironments(&config, configPath); err != nil {
+		logger.Debug("Failed to expand terraform environments", "error", err)
+		return nil, fmt.Errorf("failed to expand terraform environments: %w", err)
+	}
+
 	// Resolve inheritance before any interpolations or validation
 	logger.Debug("Resolving environment inheritance")
 	if err := resolveInheritance(&config); err != nil {
@@ -607,9 +618,13 @@ func validateConfig(config *SecretsConfig) error {
 			return fmt.Errorf("environment '%s': provider is required", envName)
 		}
 
-		// Project is required for all providers except AWS, Azure, OpenBao, Bitwarden, and local
-		if env.Project == "" && env.Provider != "aws" && env.Provider != "azure" && env.Provider != "openbao" && env.Provider != "bitwarden" && env.Provider != "local" {
+		// Project is required for all providers except AWS, Azure, OpenBao, Bitwarden, local, and terraform
+		if env.Project == "" && env.Provider != "aws" && env.Provider != "azure" && env.Provider != "openbao" && env.Provider != "bitwarden" && env.Provider != "local" && env.Provider != "terraform" {
 			return fmt.Errorf("environment '%s': project is required for provider '%s'", envName, env.Provider)
+		}
+
+		if env.Provider == "terraform" && strings.TrimSpace(env.Path) == "" {
+			return fmt.Errorf("environment '%s': path is required for provider 'terraform'", envName)
 		}
 
 		// At least one env item must be provided, possibly via inheritance
@@ -682,13 +697,14 @@ func validateConfig(config *SecretsConfig) error {
 				}
 			}
 
-			// Local provider rules: only value is allowed
-			if effectiveProvider == "local" {
+			// Local and terraform entries that are written in ws.yaml only carry a literal value.
+			// Secret refs imported from a Terraform file are stored with provider gcp.
+			if effectiveProvider == "local" || effectiveProvider == "terraform" {
 				if envItem.Value == nil {
-					return fmt.Errorf("environment '%s': env item %d: provider 'local' requires 'value'", envName, idx)
+					return fmt.Errorf("environment '%s': env item %d: provider '%s' requires 'value'", envName, idx, effectiveProvider)
 				}
 				if envItem.SecretKey != "" || len(envItem.SecretPath) > 0 || envItem.ParamKey != "" || len(envItem.ParamPath) > 0 {
-					return fmt.Errorf("environment '%s': env item %d: provider 'local' does not support 'secret-key', 'secret-path', 'param-key', or 'param-path'", envName, idx)
+					return fmt.Errorf("environment '%s': env item %d: provider '%s' does not support 'secret-key', 'secret-path', 'param-key', or 'param-path'", envName, idx, effectiveProvider)
 				}
 			}
 		}
@@ -704,7 +720,7 @@ func validateConfig(config *SecretsConfig) error {
 
 // isValidProvider checks if the provider is supported
 func isValidProvider(provider string) bool {
-	validProviders := []string{"gcp", "aws", "azure", "openbao", "bitwarden", "local"}
+	validProviders := []string{"gcp", "aws", "azure", "openbao", "bitwarden", "local", "terraform"}
 	for _, p := range validProviders {
 		if p == provider {
 			return true

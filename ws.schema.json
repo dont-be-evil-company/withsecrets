@@ -11,7 +11,7 @@
         "provider": {
           "description": "The default cloud provider for this environment.",
           "type": "string",
-          "enum": ["gcp", "azure", "aws", "openbao", "bitwarden", "local"]
+          "enum": ["gcp", "azure", "aws", "openbao", "bitwarden", "local", "terraform"]
         },
         "project": {
           "description": "The default cloud project for this environment. This can be a string or an integer.",
@@ -19,6 +19,10 @@
         },
         "region": {
           "description": "Optional cloud region for this environment (used by AWS). Falls back to AWS_REGION / AWS_DEFAULT_REGION when unset.",
+          "type": "string"
+        },
+        "path": {
+          "description": "Terraform file to read, relative to this ws.yaml file. Required when provider is terraform.",
           "type": "string"
         },
         "inherits": {
@@ -60,7 +64,7 @@
                 "value": { "type": ["string", "integer"] },
                 "provider": {
                   "type": "string",
-                  "enum": ["gcp", "azure", "aws", "openbao", "bitwarden", "local"]
+                  "enum": ["gcp", "azure", "aws", "openbao", "bitwarden", "local", "terraform"]
                 },
                 "project": { "type": ["string", "integer"] },
                 "region": {
@@ -71,7 +75,7 @@
               "allOf": [
                 {
                   "if": {
-                    "properties": { "provider": { "const": "local" } },
+                    "properties": { "provider": { "enum": ["local", "terraform"] } },
                     "required": ["provider"]
                   },
                   "then": {
@@ -143,11 +147,15 @@
           "required": ["provider"]
         },
         {
+          "if": { "properties": { "provider": { "const": "terraform" } } },
+          "then": { "required": ["path"] }
+        },
+        {
           "if": {
             "properties": {
               "provider": {
                 "not": {
-                  "enum": ["aws", "azure", "openbao", "bitwarden", "local"]
+                  "enum": ["aws", "azure", "openbao", "bitwarden", "local", "terraform"]
                 }
               }
             }
@@ -157,7 +165,7 @@
           }
         },
         {
-          "if": { "properties": { "provider": { "const": "local" } } },
+          "if": { "properties": { "provider": { "enum": ["local", "terraform"] } } },
           "then": {
             "properties": {
               "env": {

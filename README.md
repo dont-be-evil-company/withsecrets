@@ -47,6 +47,7 @@ Azure Key Vault, OpenBao, and Bitwarden Secrets Manager to your application
   - [AWS Secrets Manager](#aws-secrets-manager)
   - [Azure Key Vault](#azure-key-vault)
   - [OpenBao](#openbao)
+  - [Terraform](#terraform-terraform)
   - [Bitwarden Secrets Manager](#bitwarden-secrets-manager-bitwarden)
 
 ---
@@ -664,6 +665,7 @@ The following providers are supported:
 - OpenBao (`openbao`)
 - Bitwarden Secrets Manager (`bitwarden`)
 - Local (`local`, use for hard-coded values only)
+- Terraform (`terraform`, read env from a Cloud Run or Cloud Run function file)
 
 ### Bitwarden Secrets Manager (bitwarden)
 
@@ -918,3 +920,23 @@ default:
       secret-key: "withsecrets/foo/bar"
       field: "password"
 ```
+
+### Terraform (terraform)
+
+`provider: terraform` reads environment variables from a Terraform file. `path` is relative to the `ws.yaml` file. `project` is optional, and `env` may be omitted when the file contains at least one usable entry. `inherits` works the same way as for other providers: parent values are applied first, then entries from this environment's Terraform file, then this environment's own `env`.
+
+```yaml
+default:
+  provider: terraform
+  path: ./iac/cloudrun.tf
+  env:
+    NODE_ENV:
+      value: development
+```
+
+withsecrets imports literal strings and literal Secret Manager references from:
+
+- `google_cloud_run_v2_service` `template.containers.env` (`value`, or `value_source.secret_key_ref.secret`)
+- `google_cloudfunctions2_function` `service_config` (`environment_variables`, and `secret_environment_variables`)
+
+`var.project`, `"name-${var.environment}"`, and ternaries are skipped. Set those in `env` when you need them. A literal secret reference is fetched from GCP Secret Manager (`latest`). Its project is the literal `project_id` or `projects/{project}/secrets/{name}` in the file, then the environment `project`, then `GOOGLE_CLOUD_PROJECT`, `GCLOUD_PROJECT`, or `CLOUDSDK_CORE_PROJECT`, then the active gcloud config's `core.project`.
