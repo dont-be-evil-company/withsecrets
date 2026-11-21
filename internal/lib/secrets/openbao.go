@@ -26,7 +26,7 @@ type kvMount struct {
 
 // NewOpenBaoManager creates a new OpenBao client.
 // An empty address keeps the address from DefaultConfig (BAO_ADDR, then VAULT_ADDR, otherwise https://127.0.0.1:8200).
-// An empty token keeps BAO_TOKEN or VAULT_TOKEN from the client, then BAO_TOKEN_FILE or ~/.bao-token.
+// An empty token keeps BAO_TOKEN or VAULT_TOKEN from the client, then BAO_TOKEN_FILE or ~/.vault-token.
 func NewOpenBaoManager(ctx context.Context, address string, token string, namespace string) (*OpenBaoManager, error) {
 	// DefaultConfig already applies BAO_* / VAULT_* settings, including TLS, onto its HTTP client.
 	config := vault.DefaultConfig()
@@ -67,7 +67,7 @@ func NewOpenBaoManager(ctx context.Context, address string, token string, namesp
 	}, nil
 }
 
-// readOpenBaoTokenFile reads BAO_TOKEN_FILE, or ~/.bao-token when HOME is set.
+// readOpenBaoTokenFile reads BAO_TOKEN_FILE, or ~/.vault-token when HOME is set.
 // A missing or unreadable file is ignored. The token is trimmed so a trailing newline is not part of it.
 func readOpenBaoTokenFile() string {
 	path := os.Getenv("BAO_TOKEN_FILE")
@@ -76,7 +76,7 @@ func readOpenBaoTokenFile() string {
 		if home == "" {
 			return ""
 		}
-		path = filepath.Join(home, ".bao-token")
+		path = filepath.Join(home, ".vault-token")
 	}
 
 	buf, err := os.ReadFile(path)

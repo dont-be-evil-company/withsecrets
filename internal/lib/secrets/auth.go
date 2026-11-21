@@ -237,7 +237,7 @@ func TestOpenBaoAuthorization(ctx context.Context, projectID string) (*Authoriza
 	if err != nil {
 		result.Authenticated = false
 		result.ErrorMessage = fmt.Sprintf("Failed to create OpenBao client: %v", err)
-		result.CredentialsInfo = "Failed to connect to OpenBao. Check OPENBAO_ADDR or BAO_ADDR, and a token from OPENBAO_TOKEN, BAO_TOKEN, BAO_TOKEN_FILE, or ~/.bao-token."
+		result.CredentialsInfo = "Failed to connect to OpenBao. Check OPENBAO_ADDR or BAO_ADDR, and a token from OPENBAO_TOKEN, BAO_TOKEN, BAO_TOKEN_FILE, or ~/.vault-token."
 		return result, nil
 	}
 

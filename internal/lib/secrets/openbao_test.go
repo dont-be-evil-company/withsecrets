@@ -360,7 +360,7 @@ func TestOpenBaoTokenPrecedence(t *testing.T) {
 	home := isolateOpenBaoEnv(t)
 	tokenFile := filepath.Join(home, "from-file")
 	writeTokenFile(t, tokenFile, "from-file\n")
-	writeTokenFile(t, filepath.Join(home, ".bao-token"), "from-home\n")
+	writeTokenFile(t, filepath.Join(home, ".vault-token"), "from-home\n")
 	t.Setenv("BAO_TOKEN_FILE", tokenFile)
 	t.Setenv("BAO_TOKEN", "from-bao")
 	t.Setenv("VAULT_TOKEN", "from-vault")
@@ -388,7 +388,7 @@ func TestOpenBaoTokenPrecedence(t *testing.T) {
 	t.Setenv("BAO_TOKEN_FILE", "")
 	manager = openBaoFromFactory(t, ctx)
 	if got := manager.client.Token(); got != "from-home" {
-		t.Fatalf("token = %q, want ~/.bao-token", got)
+		t.Fatalf("token = %q, want ~/.vault-token", got)
 	}
 }
 

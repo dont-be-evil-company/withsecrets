@@ -519,9 +519,10 @@ export AZURE_CLIENT_SECRET="your-client-secret"`}
 							<p class="mb-4">
 								A normal <code>bao</code> login works without extra variables. Address uses
 								<code>OPENBAO_ADDR</code>, then <code>BAO_ADDR</code>, then <code>VAULT_ADDR</code>,
-								otherwise <code>https://127.0.0.1:8200</code>. Token uses <code>OPENBAO_TOKEN</code>,
-								then <code>BAO_TOKEN</code>, then <code>VAULT_TOKEN</code>, then the file in
-								<code>BAO_TOKEN_FILE</code>, then <code>$HOME/.bao-token</code>. Namespace uses
+								otherwise <code>https://127.0.0.1:8200</code>. Token uses
+								<code>OPENBAO_TOKEN</code>, then <code>BAO_TOKEN</code>, then
+								<code>VAULT_TOKEN</code>, then the file in
+								<code>BAO_TOKEN_FILE</code>, then <code>$HOME/.vault-token</code>. Namespace uses
 								<code>OPENBAO_NAMESPACE</code>, then <code>BAO_NAMESPACE</code>, then
 								<code>VAULT_NAMESPACE</code>. TLS settings such as <code>BAO_CACERT</code> and
 								<code>BAO_SKIP_VERIFY</code> are kept.

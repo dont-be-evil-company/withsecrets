@@ -878,7 +878,7 @@ To use OpenBao:
    - `BAO_TOKEN`
    - `VAULT_TOKEN`
    - the file in `BAO_TOKEN_FILE`
-   - `$HOME/.bao-token`
+   - `$HOME/.vault-token`
 
    Namespace, first match wins: `OPENBAO_NAMESPACE`, then `BAO_NAMESPACE`, then `VAULT_NAMESPACE`.
 
