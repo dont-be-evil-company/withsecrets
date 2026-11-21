@@ -1,7 +1,19 @@
+## 2.8.0 (2026-11-21)
+
+* feat(providers): add terraform provider support ([c89260f](https://github.com/dont-be-evil-company/withsecrets/commit/c89260f))
+
+## <small>2.7.1 (2026-11-21)</small>
+
+* fix(openbao)!: default to .vault-token instead of .bao-token ([58361a0](https://github.com/dont-be-evil-company/withsecrets/commit/58361a0))
+
 ## 2.7.0 (2026-11-18)
 
-* feat(openbao): add support for openbao cli token reads ([9aab84c](https://github.com/dont-be-evil-company/withsecrets/commit/9aab84c))
+* fix(ci): downgrade go version because of bytecode incompatibility ([641f6bf](https://github.com/dont-be-evil-company/withsecrets/commit/641f6bf))
+* fix(ci): update go version ([944597d](https://github.com/dont-be-evil-company/withsecrets/commit/944597d))
+* fix(ci): update pnpm-lock.yaml ([9aca877](https://github.com/dont-be-evil-company/withsecrets/commit/9aca877))
+* chore: update CHANGELOG ([07a9721](https://github.com/dont-be-evil-company/withsecrets/commit/07a9721))
 * chore(lint): fix lint/fmt and remove .vale config ([d2fb7ef](https://github.com/dont-be-evil-company/withsecrets/commit/d2fb7ef))
+* feat(openbao): add support for openbao cli token reads ([9aab84c](https://github.com/dont-be-evil-company/withsecrets/commit/9aab84c))
 
 ## 2.6.0 (2026-10-23)
 
