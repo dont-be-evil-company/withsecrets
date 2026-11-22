@@ -168,9 +168,10 @@ func TestLoadTerraformConfig(t *testing.T) {
 	t.Setenv("CLOUDSDK_CORE_PROJECT", "")
 
 	dir := t.TempDir()
-	require.NoError(t, os.MkdirAll(filepath.Join(dir, "iac"), 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "iac", "cloudrun.tf"), []byte(terraformFixture), 0o600))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "iac", "extra.tf"), []byte(`
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "iac", "default"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "iac", "child"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "iac", "default", "cloudrun.tf"), []byte(terraformFixture), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "iac", "child", "extra.tf"), []byte(`
 resource "google_cloud_run_v2_service" "extra" {
   template {
     containers {
@@ -185,13 +186,13 @@ resource "google_cloud_run_v2_service" "extra" {
 
 	ws := []byte(`default:
   provider: terraform
-  path: ./iac/cloudrun.tf
+  path: ./iac/default/cloudrun.tf
   env:
     NODE_ENV:
       value: development
 child:
   provider: terraform
-  path: ./iac/extra.tf
+  path: ./iac/child/extra.tf
   inherits: default
   env:
     FN_PLAIN:
@@ -272,4 +273,275 @@ func TestTerraformValidation(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "at least one env item")
 	})
+}
+
+const moduleMainTF = `
+variable "app" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "env" {
+  type    = map(string)
+  default = {}
+}
+
+variable "secrets" {
+  type    = map(string)
+  default = {}
+}
+
+locals {
+  env_plain = merge(
+    {
+      APP_NAME    = var.app
+      APP_ENV     = lookup({ prod = "production", dev = "development" }, var.environment, var.environment)
+      APP_DEBUG   = var.environment == "prod" ? "false" : "true"
+      LOG_CHANNEL = "stderr"
+      LOG_LEVEL   = var.environment == "prod" ? "error" : "debug"
+    },
+    var.env,
+  )
+  env_secrets = var.secrets
+}
+
+resource "google_cloud_run_v2_service" "service" {
+  template {
+    containers {
+      dynamic "env" {
+        for_each = local.env_plain
+        iterator = plain
+        content {
+          name  = plain.key
+          value = plain.value
+        }
+      }
+
+      dynamic "env" {
+        for_each = local.env_secrets
+        iterator = secret
+        content {
+          name = secret.key
+          value_source {
+            secret_key_ref {
+              secret  = secret.value
+              version = "latest"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+const appMainTF = `
+variable "environment" {
+  type = string
+}
+
+variable "project" {
+  type = string
+}
+
+variable "workers" {
+  type    = number
+  default = 5
+}
+
+locals {
+  secret_env = upper(var.environment)
+}
+
+module "remote" {
+  source = "hashicorp/google/google"
+}
+
+module "app" {
+  source = "../module"
+
+  app         = "pdf"
+  environment = var.environment
+
+  env = {
+    APP_NAME                = "PDF Generator"
+    SESSION_DRIVER          = "cookie"
+    GOOGLE_CLOUD_PROJECT_ID = var.project
+    WORKERS                 = tostring(var.workers)
+  }
+
+  secrets = {
+    APP_KEY = "APP_KEY"
+    DB_HOST = "WERP_${local.secret_env}_DB_HOST"
+    DB_SKIP = "WERP_${var.missing}_DB"
+  }
+}
+`
+
+func writeModuleFixture(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "module"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "app", "variables"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "module", "main.tf"), []byte(moduleMainTF), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "app", "main.tf"), []byte(appMainTF), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "app", "variables", "dev.tfvars"), []byte("environment = \"dev\"\nworkers = 7\n"), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "app", "variables", "prod.tfvars"), []byte("environment = \"prod\"\nworkers = 50\n"), 0o600))
+	return dir
+}
+
+func TestLoadTerraformModule(t *testing.T) {
+	t.Setenv("GOOGLE_CLOUD_PROJECT", "from-env")
+	t.Setenv("GCLOUD_PROJECT", "")
+	t.Setenv("CLOUDSDK_CORE_PROJECT", "")
+	t.Setenv("CLOUDSDK_CONFIG", t.TempDir())
+	t.Setenv("CLOUDSDK_ACTIVE_CONFIG_NAME", "")
+
+	dir := writeModuleFixture(t)
+	ws := []byte(`plain:
+  provider: terraform
+  path: ./app/main.tf
+  project: from-yaml
+dev:
+  provider: terraform
+  path: ./app/main.tf
+  var-file: ./app/variables/dev.tfvars
+  project: from-yaml
+  env:
+    APP_ENV:
+      value: local
+prod:
+  provider: terraform
+  path: ./app/main.tf
+  var-file: ./app/variables/prod.tfvars
+  project: from-yaml
+module:
+  provider: terraform
+  path: ./module/main.tf
+`)
+	configPath := filepath.Join(dir, "ws.yaml")
+	require.NoError(t, os.WriteFile(configPath, ws, 0o600))
+
+	cfg, err := LoadSecretsConfig(configPath)
+	require.NoError(t, err)
+
+	plain := cfg.Environments["plain"]
+	require.Equal(t, "PDF Generator", plain.Env["APP_NAME"].Value)
+	require.Equal(t, "cookie", plain.Env["SESSION_DRIVER"].Value)
+	require.Equal(t, "from-yaml", plain.Env["GOOGLE_CLOUD_PROJECT_ID"].Value)
+	require.Equal(t, "5", plain.Env["WORKERS"].Value)
+	require.Equal(t, "stderr", plain.Env["LOG_CHANNEL"].Value)
+	require.Equal(t, "APP_KEY", plain.Env["APP_KEY"].SecretKey)
+	require.Equal(t, "gcp", plain.Env["APP_KEY"].Provider)
+	require.Equal(t, "from-yaml", plain.Env["APP_KEY"].Project)
+	require.NotContains(t, plain.Env, "DB_HOST")
+	require.NotContains(t, plain.Env, "DB_SKIP")
+	require.NotContains(t, plain.Env, "APP_ENV")
+	require.NotContains(t, plain.Env, "APP_DEBUG")
+	require.NotContains(t, plain.Env, "LOG_LEVEL")
+
+	dev := cfg.Environments["dev"]
+	require.Equal(t, "local", dev.Env["APP_ENV"].Value)
+	require.Equal(t, "true", dev.Env["APP_DEBUG"].Value)
+	require.Equal(t, "debug", dev.Env["LOG_LEVEL"].Value)
+	require.Equal(t, "stderr", dev.Env["LOG_CHANNEL"].Value)
+	require.Equal(t, "PDF Generator", dev.Env["APP_NAME"].Value)
+	require.Equal(t, "7", dev.Env["WORKERS"].Value)
+	require.Equal(t, "from-yaml", dev.Env["GOOGLE_CLOUD_PROJECT_ID"].Value)
+	require.Equal(t, EnvItem{SecretKey: "APP_KEY", Provider: "gcp", Project: "from-yaml"}, dev.Env["APP_KEY"])
+	require.Equal(t, EnvItem{SecretKey: "WERP_DEV_DB_HOST", Provider: "gcp", Project: "from-yaml"}, dev.Env["DB_HOST"])
+	require.NotContains(t, dev.Env, "DB_SKIP")
+
+	prod := cfg.Environments["prod"]
+	require.Equal(t, "production", prod.Env["APP_ENV"].Value)
+	require.Equal(t, "false", prod.Env["APP_DEBUG"].Value)
+	require.Equal(t, "error", prod.Env["LOG_LEVEL"].Value)
+	require.Equal(t, "50", prod.Env["WORKERS"].Value)
+	require.Equal(t, "WERP_PROD_DB_HOST", prod.Env["DB_HOST"].SecretKey)
+
+	module := cfg.Environments["module"]
+	require.Equal(t, "stderr", module.Env["LOG_CHANNEL"].Value)
+	require.NotContains(t, module.Env, "APP_NAME")
+	require.NotContains(t, module.Env, "APP_ENV")
+	require.NotContains(t, module.Env, "APP_KEY")
+}
+
+func TestLoadTerraformVarFileIsRequiredWhenSet(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "main.tf"), []byte(`
+resource "google_cloud_run_v2_service" "service" {
+  template {
+    containers {
+      env {
+        name  = "LOG_CHANNEL"
+        value = "stderr"
+      }
+    }
+  }
+}
+`), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "ws.yaml"), []byte(`default:
+  provider: terraform
+  path: ./main.tf
+  var-file: ./missing.tfvars
+`), 0o600))
+
+	_, err := LoadSecretsConfig(filepath.Join(dir, "ws.yaml"))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "missing.tfvars")
+}
+
+func TestLoadTerraformMissingModule(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "app"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "app", "main.tf"), []byte(`
+module "app" {
+  source = "../missing"
+}
+`), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "ws.yaml"), []byte(`default:
+  provider: terraform
+  path: ./app/main.tf
+  env:
+    LOG_CHANNEL:
+      value: stderr
+`), 0o600))
+
+	_, err := LoadSecretsConfig(filepath.Join(dir, "ws.yaml"))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "missing")
+}
+
+func TestTerraformDynamicEnvDefaultIterator(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "main.tf"), []byte(`
+resource "google_cloud_run_v2_service" "service" {
+  template {
+    containers {
+      dynamic "env" {
+        for_each = { FROM_EACH = "each" }
+        content {
+          name  = each.key
+          value = each.value
+        }
+      }
+      dynamic "env" {
+        for_each = { FROM_LABEL = "label" }
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+    }
+  }
+}
+`), 0o600))
+
+	items, err := terraformEnvFromFile(filepath.Join(dir, "main.tf"), "", "")
+	require.NoError(t, err)
+	require.Equal(t, "each", items["FROM_EACH"].Value)
+	require.Equal(t, "label", items["FROM_LABEL"].Value)
 }

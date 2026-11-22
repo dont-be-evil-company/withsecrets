@@ -604,30 +604,43 @@ export OPENBAO_NAMESPACE="your-namespace"    # Optional: overrides BAO_NAMESPACE
 						<div class="card-body">
 							<h3 class="card-title">Configuration</h3>
 							<p class="mb-4">
-								<code>path</code> is relative to the <code>ws.yaml</code> file. <code>project</code>
-								is optional, and <code>env</code> may be omitted when the Terraform file yields at
-								least one entry. <code>inherits</code> still applies parents first. Terraform
-								entries come next, and this environment's <code>env</code> replaces them.
+								<code>path</code> is a Terraform file, relative to the <code>ws.yaml</code> file.
+								Every <code>.tf</code> file in that directory is read, and local modules it calls
+								are followed. <code>project</code> is optional, and <code>env</code> may be omitted
+								when that Terraform yields at least one entry. <code>inherits</code> still applies
+								parents first. Terraform entries come next, and this environment's <code>env</code>
+								replaces them.
 							</p>
 							<CodeBlock
 								lang="yaml"
 								meta="path=ws.yaml"
-								code={`default:
+								code={`dev:
   provider: terraform
-  path: ./iac/cloudrun.tf
+  path: ./apps/pdf/iac/main.tf
+  var-file: ./apps/pdf/iac/variables/dev.tfvars
+  project: my-gcp-project
   env:
-    NODE_ENV:
-      value: development`}
+    APP_ENV:
+      value: local`}
 							/>
 							<p class="mt-4">
-								Literal strings and literal Secret Manager references are imported from
-								<code>google_cloud_run_v2_service</code> container env and from
-								<code>google_cloudfunctions2_function</code> <code>service_config</code>. Variables,
-								interpolations, and ternaries are skipped. Secret references are read from GCP
-								Secret Manager at <code>latest</code>. The project comes from the resource, then
+								Optional <code>var-file</code> is also relative to <code>ws.yaml</code>. It overrides
+								variable defaults. The environment name is not a variable and does not select a
+								tfvars file. A missing <code>var-file</code> is an error.
+							</p>
+							<p class="mt-4">
+								Cloud Run container <code>env</code> blocks are imported, including
+								<code>dynamic "env"</code> blocks that iterate a map (<code>name</code> is the
+								iterator key; <code>value</code> or <code>secret_key_ref.secret</code> is the
+								iterator value). Local module arguments become that module's variables. Cloud Run
+								function <code>service_config</code> is imported too.
+								<code>merge</code>, <code>lookup</code>, <code>upper</code>, <code>lower</code>,
+								<code>tostring</code>, string templates, and <code>==</code> ternaries are evaluated.
+								Other expressions are skipped. Secret references are read from GCP Secret Manager at
+								<code>latest</code>. The project comes from the resource, then
 								<code>project</code>, then <code>GOOGLE_CLOUD_PROJECT</code>,
 								<code>GCLOUD_PROJECT</code>, or <code>CLOUDSDK_CORE_PROJECT</code>, then the active
-								gcloud config.
+								gcloud config. An unset <code>var.project</code> uses that same chain.
 							</p>
 						</div>
 					</div>

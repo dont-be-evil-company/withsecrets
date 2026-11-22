@@ -665,7 +665,7 @@ The following providers are supported:
 - OpenBao (`openbao`)
 - Bitwarden Secrets Manager (`bitwarden`)
 - Local (`local`, use for hard-coded values only)
-- Terraform (`terraform`, read env from a Cloud Run or Cloud Run function file)
+- Terraform (`terraform`, read env from Cloud Run, Cloud Run functions, and local modules)
 
 ### Bitwarden Secrets Manager (bitwarden)
 
@@ -923,20 +923,25 @@ default:
 
 ### Terraform (terraform)
 
-`provider: terraform` reads environment variables from a Terraform file. `path` is relative to the `ws.yaml` file. `project` is optional, and `env` may be omitted when the file contains at least one usable entry. `inherits` works the same way as for other providers: parent values are applied first, then entries from this environment's Terraform file, then this environment's own `env`.
+`provider: terraform` reads environment variables from Terraform. `path` is a Terraform file, relative to the `ws.yaml` file. withsecrets reads every `.tf` file in that directory and follows local modules it calls (`source` starts with `./`, `../`, or an absolute path). `project` is optional, and `env` may be omitted when the files contain at least one usable entry. `inherits` works the same way as for other providers: parent values are applied first, then entries from this environment's Terraform, then this environment's own `env`.
+
+Optional `var-file` is a Terraform variables file, also relative to `ws.yaml`. Its assignments override variable defaults. The ws.yaml environment name is not a variable and does not select a tfvars file. A missing `var-file` is an error.
 
 ```yaml
-default:
+dev:
   provider: terraform
-  path: ./iac/cloudrun.tf
+  path: ./apps/pdf/iac/main.tf
+  var-file: ./apps/pdf/iac/variables/dev.tfvars
+  project: my-gcp-project
   env:
-    NODE_ENV:
-      value: development
+    APP_ENV:
+      value: local
 ```
 
-withsecrets imports literal strings and literal Secret Manager references from:
+withsecrets imports env from:
 
-- `google_cloud_run_v2_service` `template.containers.env` (`value`, or `value_source.secret_key_ref.secret`)
+- `google_cloud_run_v2_service` container `env` blocks, including `dynamic "env"` that iterates a map. `name` is the iterator key. `value`, or `value_source.secret_key_ref.secret`, is the iterator value. The iterator is the name set on the block, Terraform's default `each`, or the block label.
+- Arguments of a local `module` call, which become that module's variables.
 - `google_cloudfunctions2_function` `service_config` (`environment_variables`, and `secret_environment_variables`)
 
-`var.project`, `"name-${var.environment}"`, and ternaries are skipped. Set those in `env` when you need them. A literal secret reference is fetched from GCP Secret Manager (`latest`). Its project is the literal `project_id` or `projects/{project}/secrets/{name}` in the file, then the environment `project`, then `GOOGLE_CLOUD_PROJECT`, `GCLOUD_PROJECT`, or `CLOUDSDK_CORE_PROJECT`, then the active gcloud config's `core.project`.
+`merge`, `lookup`, `upper`, `lower`, `tostring`, string templates, and `==` ternaries are evaluated. Other expressions are skipped. When `var.project` is still unset, withsecrets fills it from the environment `project`, then `GOOGLE_CLOUD_PROJECT`, `GCLOUD_PROJECT`, or `CLOUDSDK_CORE_PROJECT`, then the active gcloud config's `core.project`. A secret reference is fetched from GCP Secret Manager (`latest`). Its project is the literal `project_id` or `projects/{project}/secrets/{name}` in the file, then that same chain.

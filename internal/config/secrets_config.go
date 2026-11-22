@@ -22,6 +22,7 @@ type Environment struct {
 	Project  string             `yaml:"project"`
 	Region   string             `yaml:"region,omitempty"`
 	Path     string             `yaml:"path,omitempty"`
+	VarFile  string             `yaml:"var-file,omitempty"`
 	Env      map[string]EnvItem `yaml:"env"`
 	Inherits []string           `yaml:"inherits,omitempty"`
 	Cache    *cache.CacheConfig `yaml:"cache,omitempty"`
@@ -35,6 +36,7 @@ func (e *Environment) UnmarshalYAML(value *yaml.Node) error {
 		Project  string             `yaml:"project"`
 		Region   string             `yaml:"region,omitempty"`
 		Path     string             `yaml:"path,omitempty"`
+		VarFile  string             `yaml:"var-file,omitempty"`
 		Env      map[string]EnvItem `yaml:"env"`
 		Inherits interface{}        `yaml:"inherits,omitempty"`
 		Cache    interface{}        `yaml:"cache,omitempty"`
@@ -47,6 +49,7 @@ func (e *Environment) UnmarshalYAML(value *yaml.Node) error {
 	e.Project = tmp.Project
 	e.Region = tmp.Region
 	e.Path = tmp.Path
+	e.VarFile = tmp.VarFile
 	e.Env = tmp.Env
 
 	// Normalize inherits to []string

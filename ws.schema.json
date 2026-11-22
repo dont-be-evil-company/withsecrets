@@ -22,7 +22,11 @@
           "type": "string"
         },
         "path": {
-          "description": "Terraform file to read, relative to this ws.yaml file. Required when provider is terraform.",
+          "description": "Terraform file to read, relative to this ws.yaml file. Required when provider is terraform. Every .tf file in that directory is read, and local modules it calls are followed.",
+          "type": "string"
+        },
+        "var-file": {
+          "description": "Optional Terraform variable file, relative to this ws.yaml file. Assignments override variable defaults. The environment name is not a variable source. A missing file is an error when this is set.",
           "type": "string"
         },
         "inherits": {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -34,12 +35,16 @@ func expandTerraformEnvironments(config *SecretsConfig, configPath string) error
 		if !filepath.IsAbs(tfPath) {
 			tfPath = filepath.Join(baseDir, tfPath)
 		}
-		data, err := os.ReadFile(tfPath)
-		if err != nil {
+		if _, err := os.Stat(tfPath); err != nil {
 			return fmt.Errorf("environment '%s': failed to read terraform file %q: %w", name, env.Path, err)
 		}
 
-		imported, err := terraformEnvItems(data, tfPath, env.Project)
+		varFile := strings.TrimSpace(env.VarFile)
+		if varFile != "" && !filepath.IsAbs(varFile) {
+			varFile = filepath.Join(baseDir, varFile)
+		}
+
+		imported, err := terraformEnvFromFile(tfPath, varFile, env.Project)
 		if err != nil {
 			return fmt.Errorf("environment '%s': %w", name, err)
 		}
@@ -59,6 +64,40 @@ func expandTerraformEnvironments(config *SecretsConfig, configPath string) error
 // terraformEnvItems returns env items from Cloud Run and Cloud Run function resources.
 // Later resources and env blocks replace earlier ones with the same name.
 func terraformEnvItems(src []byte, filename, envProject string) (map[string]EnvItem, error) {
+	body, err := parseHCLBody(src, filename)
+	if err != nil {
+		return nil, err
+	}
+	items := map[string]EnvItem{}
+	if err := importModuleInto(filepath.Dir(filename), []*hclsyntax.Body{body}, nil, envProject, map[string]struct{}{}, items); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// terraformEnvFromFile reads every .tf file next to path, applies varFile when set,
+// and imports Cloud Run env from that module and from local modules it calls.
+func terraformEnvFromFile(tfPath, varFile, envProject string) (map[string]EnvItem, error) {
+	dir := filepath.Dir(tfPath)
+	bodies, err := parseTerraformDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var preset map[string]tfValue
+	if strings.TrimSpace(varFile) != "" {
+		preset, err = loadTFVars(varFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+	items := map[string]EnvItem{}
+	if err := importModuleInto(dir, bodies, preset, envProject, map[string]struct{}{}, items); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+func parseHCLBody(src []byte, filename string) (*hclsyntax.Body, error) {
 	file, diags := hclsyntax.ParseConfig(src, filename, hcl.InitialPos)
 	if diags.HasErrors() {
 		return nil, fmt.Errorf("failed to parse terraform file: %s", diags.Error())
@@ -67,37 +106,275 @@ func terraformEnvItems(src []byte, filename, envProject string) (map[string]EnvI
 	if !ok {
 		return nil, fmt.Errorf("failed to parse terraform file: unexpected body type %T", file.Body)
 	}
+	return body, nil
+}
 
-	items := map[string]EnvItem{}
-	for _, block := range body.Blocks {
-		if block.Type != "resource" || len(block.Labels) == 0 {
+func parseTerraformDir(dir string) ([]*hclsyntax.Body, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read terraform directory %q: %w", dir, err)
+	}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".tf") {
 			continue
 		}
-		switch block.Labels[0] {
-		case tfCloudRunService:
-			if err := collectCloudRunEnv(block.Body, envProject, items); err != nil {
-				return nil, err
+		names = append(names, entry.Name())
+	}
+	sort.Strings(names)
+
+	bodies := make([]*hclsyntax.Body, 0, len(names))
+	for _, name := range names {
+		path := filepath.Join(dir, name)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read terraform file %q: %w", path, err)
+		}
+		body, err := parseHCLBody(data, path)
+		if err != nil {
+			return nil, err
+		}
+		bodies = append(bodies, body)
+	}
+	return bodies, nil
+}
+
+// importModuleInto evaluates variables and locals, then collects Cloud Run env.
+// preset overrides variable defaults. Local module calls are followed.
+// stack holds module directories already being imported, so cycles fail the load.
+func importModuleInto(dir string, bodies []*hclsyntax.Body, preset map[string]tfValue, envProject string, stack map[string]struct{}, items map[string]EnvItem) error {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return fmt.Errorf("failed to read terraform directory %q: %w", dir, err)
+	}
+	if _, seen := stack[abs]; seen {
+		return fmt.Errorf("terraform module cycle at %s", abs)
+	}
+	stack[abs] = struct{}{}
+	defer delete(stack, abs)
+
+	scope := newTFScope()
+	for _, body := range bodies {
+		for _, block := range body.Blocks {
+			if block.Type != "variable" || len(block.Labels) == 0 {
+				continue
 			}
-		case tfCloudRunFunction:
-			if err := collectCloudFunctionEnv(block.Body, envProject, items); err != nil {
-				return nil, err
+			if def := attrExpr(block.Body, "default"); def != nil {
+				scope.setVar(block.Labels[0], scope.eval(def))
 			}
 		}
 	}
-	return items, nil
-}
+	for name, val := range preset {
+		scope.setVar(name, val)
+	}
+	if scope.vars["project"].isUnset() {
+		if project, err := resolveGCPProject("", envProject); err == nil && strings.TrimSpace(project) != "" {
+			scope.setVar("project", tfStringVal(project))
+		}
+	}
+	for _, body := range bodies {
+		for _, block := range blocksNamed(body, "locals") {
+			for name, attr := range block.Body.Attributes {
+				scope.localExprs[name] = attr.Expr
+			}
+		}
+	}
 
-func collectCloudRunEnv(body *hclsyntax.Body, envProject string, items map[string]EnvItem) error {
-	for _, template := range blocksNamed(body, "template") {
-		for _, containers := range blocksNamed(template.Body, "containers") {
-			for _, envBlock := range blocksNamed(containers.Body, "env") {
-				if err := addCloudRunEnv(envBlock.Body, envProject, items); err != nil {
+	for _, body := range bodies {
+		for _, block := range body.Blocks {
+			switch block.Type {
+			case "resource":
+				if len(block.Labels) == 0 {
+					continue
+				}
+				switch block.Labels[0] {
+				case tfCloudRunService:
+					if err := collectCloudRunEnv(block.Body, scope, envProject, items); err != nil {
+						return err
+					}
+				case tfCloudRunFunction:
+					if err := collectCloudFunctionEnv(block.Body, envProject, items); err != nil {
+						return err
+					}
+				}
+			case "module":
+				if err := followModule(block, abs, scope, envProject, stack, items); err != nil {
 					return err
 				}
 			}
 		}
 	}
 	return nil
+}
+
+func followModule(block *hclsyntax.Block, parentDir string, scope *tfScope, envProject string, stack map[string]struct{}, items map[string]EnvItem) error {
+	source, ok := literalString(attrExpr(block.Body, "source"))
+	if !ok || !isLocalModuleSource(source) {
+		return nil
+	}
+	modDir := source
+	if !filepath.IsAbs(modDir) {
+		modDir = filepath.Join(parentDir, source)
+	}
+	modDir = filepath.Clean(modDir)
+	info, err := os.Stat(modDir)
+	if err != nil {
+		return fmt.Errorf("failed to read terraform module %q: %w", source, err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("failed to read terraform module %q: not a directory", source)
+	}
+	bodies, err := parseTerraformDir(modDir)
+	if err != nil {
+		return err
+	}
+	args := map[string]tfValue{}
+	for name, attr := range block.Body.Attributes {
+		if isModuleMetaArg(name) {
+			continue
+		}
+		args[name] = scope.eval(attr.Expr)
+	}
+	return importModuleInto(modDir, bodies, args, envProject, stack, items)
+}
+
+func isLocalModuleSource(source string) bool {
+	source = strings.TrimSpace(source)
+	if source == "" {
+		return false
+	}
+	slash := filepath.ToSlash(source)
+	if slash == "." || slash == ".." || strings.HasPrefix(slash, "./") || strings.HasPrefix(slash, "../") {
+		return true
+	}
+	return filepath.IsAbs(source)
+}
+
+func isModuleMetaArg(name string) bool {
+	switch name {
+	case "source", "version", "count", "for_each", "providers", "depends_on":
+		return true
+	default:
+		return false
+	}
+}
+
+func collectCloudRunEnv(body *hclsyntax.Body, scope *tfScope, envProject string, items map[string]EnvItem) error {
+	for _, template := range blocksNamed(body, "template") {
+		for _, containers := range blocksNamed(template.Body, "containers") {
+			if containers.Body == nil {
+				continue
+			}
+			for _, block := range containers.Body.Blocks {
+				switch {
+				case block.Type == "env":
+					if err := addCloudRunEnv(block.Body, envProject, items); err != nil {
+						return err
+					}
+				case block.Type == "dynamic" && len(block.Labels) > 0 && block.Labels[0] == "env":
+					if err := addDynamicCloudRunEnv(block, scope, envProject, items); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// addDynamicCloudRunEnv imports a dynamic env block whose for_each is a map.
+// name must be the iterator key. value, or secret_key_ref.secret, must be the iterator value.
+// The iterator is the explicit name, or Terraform's default "each". The block label is also accepted.
+func addDynamicCloudRunEnv(block *hclsyntax.Block, scope *tfScope, envProject string, items map[string]EnvItem) error {
+	if scope == nil || block.Body == nil {
+		return nil
+	}
+	each := scope.eval(attrExpr(block.Body, "for_each"))
+	if each.kind != tfMap {
+		return nil
+	}
+	contents := blocksNamed(block.Body, "content")
+	if len(contents) == 0 || contents[0].Body == nil {
+		return nil
+	}
+	content := contents[0].Body
+	iterator, ok := dynamicIterator(block, attrExpr(content, "name"))
+	if !ok {
+		return nil
+	}
+
+	if _, hasValue := content.Attributes["value"]; hasValue {
+		if !iteratorAttr(attrExpr(content, "value"), iterator, "value") {
+			return nil
+		}
+		for key, val := range each.mp {
+			text, ok := val.asString()
+			if !ok || key == "" {
+				continue
+			}
+			items[key] = EnvItem{Value: text}
+		}
+		return nil
+	}
+
+	for _, source := range blocksNamed(content, "value_source") {
+		for _, ref := range blocksNamed(source.Body, "secret_key_ref") {
+			if !iteratorAttr(attrExpr(ref.Body, "secret"), iterator, "value") {
+				continue
+			}
+			for key, val := range each.mp {
+				text, ok := val.asString()
+				if !ok || key == "" || text == "" {
+					continue
+				}
+				item, err := gcpSecretItem(key, text, "", envProject)
+				if err != nil {
+					return err
+				}
+				items[key] = item
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+// dynamicIterator returns the iterator name used by name = <iterator>.key.
+func dynamicIterator(block *hclsyntax.Block, nameExpr hcl.Expression) (string, bool) {
+	candidates := []string{"each"}
+	if name, ok := identifierName(attrExpr(block.Body, "iterator")); ok && name != "" {
+		candidates = []string{name}
+	} else if len(block.Labels) > 0 && block.Labels[0] != "" && block.Labels[0] != "each" {
+		candidates = append(candidates, block.Labels[0])
+	}
+	for _, name := range candidates {
+		if iteratorAttr(nameExpr, name, "key") {
+			return name, true
+		}
+	}
+	return "", false
+}
+
+func iteratorAttr(expr hcl.Expression, iterator, attr string) bool {
+	for {
+		switch e := expr.(type) {
+		case nil:
+			return false
+		case *hclsyntax.ParenthesesExpr:
+			expr = e.Expression
+		case *hclsyntax.TemplateWrapExpr:
+			expr = e.Wrapped
+		case *hclsyntax.ScopeTraversalExpr:
+			if len(e.Traversal) != 2 {
+				return false
+			}
+			root, ok := e.Traversal[0].(hcl.TraverseRoot)
+			step, okAttr := e.Traversal[1].(hcl.TraverseAttr)
+			return ok && okAttr && root.Name == iterator && step.Name == attr
+		default:
+			return false
+		}
+	}
 }
 
 func addCloudRunEnv(body *hclsyntax.Body, envProject string, items map[string]EnvItem) error {
