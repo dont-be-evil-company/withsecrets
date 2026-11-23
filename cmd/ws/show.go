@@ -152,7 +152,8 @@ func runShowCommand(patterns []string, listEnvironments bool) error {
 		}
 	case "shell":
 		for _, key := range getSortedKeys(displaySecrets) {
-			fmt.Printf("export %s='%s'\n", key, displaySecrets[key])
+			escaped := strings.ReplaceAll(displaySecrets[key], "'", "'\\''")
+			fmt.Printf("export %s='%s'\n", key, escaped)
 		}
 	case "json":
 		payload, err := json.MarshalIndent(displaySecrets, "", "  ")
